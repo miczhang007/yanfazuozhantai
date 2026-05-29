@@ -184,7 +184,10 @@ var WEEK_START = getWeekStart(TODAY);
 const CLOSED_REQ = ['已完成','已关闭'];
 const CLOSED_TASK = ['已完成','已关闭','已取消'];
 const CLOSED_BUG = ['已关闭','已解决'];
-const PRODUCT_MAP = {};
+const PRODUCT_MAP = {
+  '碳纤维一期':'碳纤维工艺监控和生产数据应用平台',
+  '金联仓储1.0':'金联仓储（金化运仓储版）'
+};
 
 // ====== HELPERS ======
 function parseDate(d) { if(!d||d==='0000-00-00')return''; return d.substring(0,10); }
@@ -192,6 +195,18 @@ function daysBetween(a,b) { if(!a||!b)return 0; return Math.floor((new Date(b)-n
 function isOverdue(d) { return d && d < TODAY; }
 function isThisWeek(d) { return d && d >= WEEK_START && d <= TODAY; }
 function isActive(s, closedList) { return !closedList.includes(s); }
+function normalizeProductName(name) {
+  var product=(name||'').replace(/\(#\d+\)/,'').trim();
+  if(!product || product==='未归属产品')return '';
+  for(var k in PRODUCT_MAP){
+    if(product===k || product.includes(k))return PRODUCT_MAP[k];
+  }
+  return product;
+}
+function getRelatedReqId(rel) {
+  var m=(rel||'').match(/#(\d+)/);
+  return m ? m[1] : '';
+}
 function isReqOpen(req) {
   return isActive(req.status,CLOSED_REQ) && !(req.phase&&/测试完毕|测试完成|已测试/.test(req.phase));
 }
@@ -367,7 +382,7 @@ function normalizeRecords(rows, type) {
     if(type==='task'){
       var exec=r[idx.exec]||''; rec.product=mapExecToProduct(exec);
     }else{
-      if(idx.product>=0)rec.product=(r[idx.product]||'').replace(/\(#\d+\)/,'').trim();
+      if(idx.product>=0)rec.product=normalizeProductName(r[idx.product]);
     }
     if(idx.title>=0)rec.title=r[idx.title];
     if(idx.rel>=0)rec.rel=r[idx.rel];
@@ -400,8 +415,8 @@ function normalizeRecords(rows, type) {
 
 function mapExecToProduct(exec) {
   for(var k in PRODUCT_MAP){ if(exec&&exec.includes(k))return PRODUCT_MAP[k]; }
-  if(exec&&exec.includes('/开发'))return'未归属产品';
-  return (exec||'').replace(/\(.*$/,'').replace(/^\//,'').trim();
+  if(exec&&exec.includes('/开发'))return '';
+  return normalizeProductName((exec||'').replace(/\(.*$/,'').replace(/^\//,''));
 }
 
 function normalizePersonName(name) {
@@ -497,6 +512,17 @@ function loadRecords(records) {
     var key=r.type+':'+r.id;
     if(!seen[key]){seen[key]=true;deduped.push(r);}
   });
+  var reqProducts={};
+  deduped.forEach(function(r){
+    r.product=normalizeProductName(r.product);
+    if(r.type==='req' && r.id && r.product)reqProducts[r.id]=r.product;
+  });
+  deduped.forEach(function(r){
+    if(r.type==='task'){
+      var reqId=getRelatedReqId(r.rel);
+      if(reqId && reqProducts[reqId])r.product=reqProducts[reqId];
+    }
+  });
   var childTaskRels={};
   var parentTaskTitles={};
   deduped.forEach(function(r){
@@ -576,8 +602,12 @@ function computeStats() {
   });
   
   recs.forEach(function(r){
-    var p=r.product||'未知产品'; if(!products[p])products[p]={req:0,reqActive:0,reqClosed:0,reqOverdue:0,reqWeekDone:0,reqStale:0, task:0,taskActive:0,taskClosed:0,taskOverdue:0,taskWeekDone:0,taskStale:0, bug:0,bugActive:0,bugClosed:0,bugOverdue:0,bugSevere:0,bugWeekClosed:0, persons:{}};
-    var pd=products[p];
+    var p=normalizeProductName(r.product);
+    var pd=null;
+    if(p){
+      if(!products[p])products[p]={req:0,reqActive:0,reqClosed:0,reqOverdue:0,reqWeekDone:0,reqStale:0, task:0,taskActive:0,taskClosed:0,taskOverdue:0,taskWeekDone:0,taskStale:0, bug:0,bugActive:0,bugClosed:0,bugOverdue:0,bugSevere:0,bugWeekClosed:0, persons:{}};
+      pd=products[p];
+    }
     var closedLists={req:CLOSED_REQ,task:CLOSED_TASK,bug:CLOSED_BUG};
     var cl=closedLists[r.type];
     var active=isActive(r.status,cl);
@@ -595,20 +625,27 @@ function computeStats() {
     var weekDone=isThisWeek(r.type==='task' ? (r.done||r.closed) : r.closed);
     
     if(r.type==='req'){
-      pd.req++; if(active)pd.reqActive++; if(!active)pd.reqClosed++;
-      if(overdue)pd.reqOverdue++; if(weekDone)pd.reqWeekDone++;
-      if(reqAttention.attention)pd.reqStale++;
+      if(pd){
+        pd.req++; if(active)pd.reqActive++; if(!active)pd.reqClosed++;
+        if(overdue)pd.reqOverdue++; if(weekDone)pd.reqWeekDone++;
+        if(reqAttention.attention)pd.reqStale++;
+      }
     }else if(r.type==='task'){
-      pd.task++; if(active)pd.taskActive++; if(!active)pd.taskClosed++;
-      if(overdue)pd.taskOverdue++; if(weekDone)pd.taskWeekDone++;
-      if(taskAttention.attention)pd.taskStale++;
+      if(pd){
+        pd.task++; if(active)pd.taskActive++; if(!active)pd.taskClosed++;
+        if(overdue)pd.taskOverdue++; if(weekDone)pd.taskWeekDone++;
+        if(taskAttention.attention)pd.taskStale++;
+      }
     }else if(r.type==='bug'){
-      pd.bug++; if(active)pd.bugActive++; if(!active)pd.bugClosed++;
-      if(overdue)pd.bugOverdue++; if(weekDone)pd.bugWeekClosed++;
-      if(isBugSevereOpen(r))pd.bugSevere++;
+      if(pd){
+        pd.bug++; if(active)pd.bugActive++; if(!active)pd.bugClosed++;
+        if(overdue)pd.bugOverdue++; if(weekDone)pd.bugWeekClosed++;
+        if(isBugSevereOpen(r))pd.bugSevere++;
+      }
     }
     
     function markProductPerson(name){
+      if(!pd)return;
       var person=normalizePersonName(name);
       if(person && person!=='未分配' && !/^closed$/i.test(person))pd.persons[person]=true;
     }
