@@ -1,12 +1,1276 @@
-<!doctype html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=index-v2.html">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>部门研发作战台</title>
-</head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>研发作战台</title>
+<style>
+:root{--bg:#0b1121;--bg2:#131c31;--card-bg:#161f3a;--card-hover:#1b2548;--border:#1e2d52;--text:#e2e8f0;--text2:#8896b4;--text3:#5c6e8e;--accent:#3b82f6;--accent2:#818cf8;--warn:#f59e0b;--danger:#ef4444;--success:#10b981;--radius:8px;--radius-sm:6px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;min-height:100vh}
+[data-tip]{position:relative;cursor:help}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0f172a;color:var(--text);font-size:11px;line-height:1.4;padding:6px 10px;border-radius:6px;border:1px solid var(--border);white-space:pre-line;z-index:999;pointer-events:none;max-width:280px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+[data-tip]:hover::before{content:"";position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#0f172a;z-index:999;pointer-events:none}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--bg2);border-right:1px solid var(--border);padding:24px 0;z-index:50;display:flex;flex-direction:column}
+.sidebar-logo{padding:0 20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sidebar-logo .logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff}
+.sidebar-logo h2{font-size:15px;font-weight:700;color:var(--text);letter-spacing:.5px}
+.sidebar-nav{flex:1;padding:16px 0;overflow-y:auto}
+.nav-item{padding:10px 20px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s;border-left:3px solid transparent;margin:2px 0}
+.nav-item:hover{color:var(--text);background:rgba(59,130,246,.06)}
+.nav-item.active{color:var(--accent);background:rgba(59,130,246,.1);border-left-color:var(--accent)}
+.nav-item svg{width:18px;height:18px;opacity:.7}
+.nav-item.active svg,.nav-item.nav-parent.open svg{opacity:1}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);font-size:12px;color:var(--text3)}
+.nav-parent{position:relative}
+.nav-chevron{width:12px;height:12px;margin-left:auto;transition:transform .2s;opacity:.5}
+.nav-parent.open .nav-chevron{transform:rotate(180deg)}
+.nav-sub{display:none;padding:4px 0 4px 28px}
+.nav-parent.open+.nav-sub{display:block}
+.nav-sub-item{padding:6px 12px;font-size:12px;color:var(--text2);cursor:pointer;border-radius:4px;transition:all .12s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-sub-item:hover{color:var(--text);background:rgba(59,130,246,.06)}
+.nav-sub-item.active{color:var(--accent);background:rgba(59,130,246,.1);font-weight:500}
+.main{margin-left:220px;min-height:100vh}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:40}
+.topbar .breadcrumb{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px}
+.topbar .breadcrumb span{color:var(--text)}
+.topbar-actions{display:flex;gap:10px;align-items:center}
+.btn{padding:7px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card-bg);font-size:12px;cursor:pointer;font-family:var(--font);color:var(--text2);transition:all .15s;display:flex;align-items:center;gap:6px}
+.btn:hover{background:var(--card-hover);color:var(--text);border-color:#2a3a5c}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#2563eb;border-color:#2563eb}
+.content{padding:28px}
+.view{display:none}
+.view.active{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px}
+.kpi-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:visible}
+.kpi-card::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 2px 2px 0;background:var(--accent)}
+.kpi-card.warn::before{background:var(--warn)}
+.kpi-card.danger::before{background:var(--danger)}
+.kpi-card.success::before{background:var(--success)}
+.kpi-card .kpi-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.kpi-card .kpi-label{font-size:12px;color:var(--text2)}
+.kpi-card .kpi-icon{font-size:16px;opacity:.7}
+.kpi-card .kpi-value{font-size:30px;font-weight:700;line-height:1.1;margin-bottom:2px}
+.kpi-card .kpi-sub{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.kpi-card .kpi-sub .dot{width:6px;height:6px;border-radius:50%}
+.kpi-card .kpi-sub .dot.warn{background:var(--warn)}
+.kpi-card .kpi-sub .dot.danger{background:var(--danger)}
+.kpi-card .kpi-sub .dot.success{background:var(--success)}
+.weekly-badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--success)}
+.weekly-badge svg{width:10px;height:10px}
+.chart-row{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:24px}
+.chart-row.equal{grid-template-columns:1fr 1fr}
+.chart-panel{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.chart-panel .chart-title{font-size:14px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.chart-panel .chart-title .sub{font-size:11px;color:var(--text2);font-weight:400}
+.chart-panel .legend{display:flex;gap:16px;margin-bottom:12px}
+.chart-panel .legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)}
+.chart-panel .legend-item .legend-dot{width:8px;height:8px;border-radius:2px}
+.legend-dot.blue{background:var(--accent)}.legend-dot.green{background:var(--success)}.legend-dot.red{background:var(--danger)}.legend-dot.yellow{background:var(--warn)}.legend-dot.purple{background:#a78bfa}
+.sparkline{width:100%;height:120px}
+.sparkline line{stroke:var(--border);stroke-width:1}
+.sparkline polyline{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.product-list{display:flex;flex-direction:column;gap:10px}
+.product-item{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:grid;grid-template-columns:minmax(220px,1.1fr) minmax(0,3.2fr) auto;gap:20px;align-items:center;cursor:pointer;transition:all .15s}
+.product-item:hover{border-color:var(--accent);background:var(--card-hover)}
+.product-item .prod-name{font-size:14px;font-weight:600;min-width:0;line-height:1.4}
+.product-item .prod-meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:start;min-width:0}
+.product-item .meta-item{text-align:center;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:100%}
+.product-item .meta-item .val{font-size:20px;font-weight:700}
+.product-item .meta-item .lbl{font-size:11px;color:var(--text2);margin-top:2px;white-space:nowrap;min-height:16px}
+.product-item .meta-item .weekly{font-size:10px;color:var(--success);margin-top:1px;white-space:nowrap;min-height:14px}
+.product-item .mini-bar{width:100%;max-width:92px;height:4px;background:var(--border);border-radius:2px;margin:6px auto 0;overflow:hidden}
+.product-item .mini-bar-fill{height:100%;border-radius:2px;background:var(--accent)}
+.product-item .prod-status{padding:4px 10px;border-radius:999px;font-size:11px;font-weight:500}
+.prod-status.normal{background:rgba(16,185,129,.15);color:var(--success)}
+.prod-status.warn{background:rgba(245,158,11,.15);color:var(--warn)}
+.prod-status.danger{background:rgba(239,68,68,.15);color:var(--danger)}
+.person-table{width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:auto}
+.person-table table{width:100%;border-collapse:collapse}
+.person-table th{text-align:left;padding:10px 16px;font-size:11px;font-weight:600;color:var(--text2);background:rgba(30,41,59,.5);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.person-table td{padding:10px 16px;font-size:13px;border-bottom:1px solid var(--border)}
+.person-table tr:last-child td{border-bottom:none}
+.person-table tr:hover td{background:var(--card-hover)}
+.person-table .load-bar{width:100px;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.person-table .load-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.load-over{background:var(--danger)}.load-high{background:var(--warn)}.load-normal{background:var(--accent)}.load-low{background:var(--success)}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:500}
+.tag-over{background:rgba(239,68,68,.15);color:var(--danger)}.tag-normal{background:rgba(59,130,246,.15);color:var(--accent)}.tag-idle{background:rgba(16,185,129,.15);color:var(--success)}
+.view-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+.detail-panels{display:flex;flex-direction:column;gap:10px}
+.detail-panel{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;cursor:pointer;user-select:none;border-bottom:1px solid transparent;transition:all .15s}
+.panel-header:hover{background:var(--card-hover)}
+.panel-header.open{border-bottom-color:var(--border)}
+.panel-header .panel-title{font-weight:600;font-size:13px;display:flex;align-items:center;gap:8px}
+.panel-header .panel-count{font-size:11px;color:var(--text2);font-weight:400}
+.panel-header .chevron{transition:transform .2s;color:var(--text2)}
+.panel-header.open .chevron{transform:rotate(180deg)}
+.panel-body{display:none}
+.panel-body.open{display:block}
+.panel-body table{width:100%;border-collapse:collapse}
+.panel-body th{text-align:left;padding:8px 10px;font-size:11px;font-weight:600;color:var(--text2);background:rgba(30,41,59,.5);border-bottom:1px solid var(--border);white-space:nowrap}
+.panel-body td{padding:8px 10px;font-size:12px;border-bottom:1px solid var(--border)}
+.panel-body tr:last-child td{border-bottom:none}
+.panel-body tr:hover td{background:var(--card-hover);cursor:pointer}
+.panel-body .warn-icon{color:var(--warn);font-weight:700;display:inline-block;min-width:12px;text-align:center}
+.panel-body .warn-cell{cursor:help;min-width:28px}
+.severity-high{color:var(--danger);font-weight:500}
+.severity-mid{color:var(--warn);font-weight:500}
+.section-header{font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.section-header .count{font-size:12px;color:var(--text2);font-weight:400}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text2)}
+.empty-state .empty-icon{font-size:40px;margin-bottom:12px;opacity:.3}
+.trend-wrap{position:relative;width:100%;height:150px}
+.trend-tooltip{display:none;position:absolute;top:10px;min-width:150px;background:#0f172a;border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:11px;line-height:1.6;box-shadow:0 8px 24px rgba(0,0,0,.35);pointer-events:none;z-index:3}
+.trend-tooltip .date{font-weight:600;margin-bottom:4px;color:var(--text)}
+.trend-tooltip .req{color:var(--accent)}
+.trend-tooltip .task{color:var(--warn)}
+.trend-tooltip .bug{color:var(--danger)}
+.trend-hover-line{display:none;stroke:#94a3b8;stroke-width:1;stroke-dasharray:3,3;opacity:.7}
+@media(max-width:1280px){.chart-row{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:1024px){.sidebar{width:60px}.sidebar-logo h2,.nav-item span,.sidebar-footer,.nav-chevron,.nav-sub{display:none}.sidebar-logo{justify-content:center;padding:0}.nav-item{justify-content:center;padding:12px}.main{margin-left:60px}.kpi-grid{grid-template-columns:repeat(2,1fr)}.view-kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0}.kpi-grid{grid-template-columns:repeat(2,1fr)}.product-item{grid-template-columns:1fr;align-items:flex-start}.product-item .prod-meta{width:100%}.topbar{flex-wrap:wrap;height:auto;padding:12px;gap:8px}.content{padding:16px}}
+@media(max-width:480px){.kpi-grid,.view-kpi-grid{grid-template-columns:1fr}.kpi-value{font-size:24px}}
+</style>
+
 <body>
-  <a href="index-v2.html">进入部门研发作战台</a>
+<div class="sidebar">
+  <div class="sidebar-logo"><div class="logo-icon">R</div><h2>研发作战台</h2></div>
+  <nav class="sidebar-nav" id="sidebar-nav"></nav>
+  <div class="sidebar-footer" id="sidebar-footer">就绪</div>
+</div>
+<div class="main">
+<header class="topbar">
+  <div class="breadcrumb">仪表盘 <span style="opacity:.5">/</span> <span id="breadcrumb-page">总览视图</span><span style="opacity:.5">/</span><span id="stats-date-label">统计日期：未选择</span></div>
+  <div class="topbar-actions">
+    <label class="btn" style="cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>导入日期文件夹<input type="file" id="csv-input" multiple webkitdirectory directory accept=".csv" style="display:none" onchange="handleFiles(this.files)"></label>
+    <button class="btn" onclick="loadEmbedded()">加载示例数据</button>
+    <button class="btn" onclick="clearData()">清空</button>
+    <button class="btn btn-export" onclick="exportWeeklyReport()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>导出周报</button>
+  </div>
+</header>
+<div class="content">
+
+<div class="view active" id="view-overview">
+  <div class="kpi-grid" id="overview-kpi"></div>
+  <div class="chart-row" style="grid-template-columns:1fr">
+    <div class="chart-panel"><div class="chart-title">活跃需求 / 任务 / Bug 趋势<span class="sub">近 30 天</span></div><div class="legend"><div class="legend-item"><div class="legend-dot blue"></div>活跃需求</div><div class="legend-item"><div class="legend-dot yellow"></div>活跃任务</div><div class="legend-item"><div class="legend-dot red"></div>活跃Bug</div></div><div id="overview-trend-chart"><svg class="sparkline" viewBox="0 0 600 120" preserveAspectRatio="none"><line x1="40" y1="100" x2="600" y2="100" stroke="var(--border)" stroke-width="0.5"/><polyline points="40,90 80,88 120,86 160,84 200,81 240,79 280,77 320,75 360,73 400,71 440,69 480,67 520,65 560,63 600,61" stroke="var(--accent)" stroke-width="2.5" fill="none"/><polyline points="40,94 80,93 120,91 160,90 200,88 240,86 280,84 320,82 360,80 400,78 440,76 480,74 520,72 560,70 600,68" stroke="var(--warn)" stroke-width="2.5" fill="none"/><polyline points="40,97 80,96 120,95 160,94 200,93 240,91 280,90 320,88 360,87 400,85 440,84 480,82 520,81 560,79 600,78" stroke="var(--danger)" stroke-width="2.5" fill="none"/></svg></div></div>
+  </div>
+  <div class="section-header">产品态势 <span class="count" id="product-count-label"></span></div>
+  <div class="product-list" id="product-list"></div>
+  <div class="section-header" style="margin-top:24px">人员负荷概览 <span class="count" id="person-count-label"></span></div>
+  <div class="person-table" id="person-table"></div>
+</div>
+
+<div class="view" id="view-product">
+  <div class="view-kpi-grid" id="product-kpi"></div>
+  <div class="chart-row equal" id="product-charts"></div>
+  <div class="detail-panels" id="product-details"></div>
+</div>
+
+</div></div>
+
+<div id="empty-state" class="empty-state" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--text2)">
+  <div class="empty-icon">📂</div>
+  <p style="margin-top:8px">请导入 CSV 数据或点击「加载示例数据」</p>
+</div>
+
+<script>
+
+// ====== CONSTANTS ======
+var TODAY = '2026-05-29';
+var WEEK_START = getWeekStart(TODAY);
+const CLOSED_REQ = ['已完成','已关闭'];
+const CLOSED_TASK = ['已完成','已关闭','已取消'];
+const CLOSED_BUG = ['已关闭','已解决'];
+const PRODUCT_MAP = {
+  '碳纤维一期':'碳纤维工艺监控和生产数据应用平台',
+  '金联仓储1.0':'金联仓储（金化运仓储版）'
+};
+
+// ====== HELPERS ======
+function parseDate(d) { if(!d||d==='0000-00-00')return''; return d.substring(0,10); }
+function daysBetween(a,b) { if(!a||!b)return 0; return Math.floor((new Date(b)-new Date(a))/86400000); }
+function isOverdue(d) { return d && d < TODAY; }
+function isThisWeek(d) { return d && d >= WEEK_START && d <= TODAY; }
+function isActive(s, closedList) { return !closedList.includes(s); }
+function normalizeProductName(name) {
+  var product=(name||'').replace(/\(#\d+\)/,'').trim();
+  if(!product || product==='未归属产品')return '';
+  for(var k in PRODUCT_MAP){
+    if(product===k || product.includes(k))return PRODUCT_MAP[k];
+  }
+  return product;
+}
+function getRelatedReqId(rel) {
+  var m=(rel||'').match(/#(\d+)/);
+  return m ? m[1] : '';
+}
+function isReqOpen(req) {
+  return isActive(req.status,CLOSED_REQ) && !(req.phase&&/测试完毕|测试完成|已测试/.test(req.phase));
+}
+function isTaskFinished(r) { return !isActive(r.status, CLOSED_TASK) || !!(r.done || r.closed); }
+function isBugSevereOpen(r) {
+  return isActive(r.status,CLOSED_BUG) && (r.severity==='1'||r.severity==='2');
+}
+function isBugAgedOpen(r) {
+  return isActive(r.status, CLOSED_BUG) && r.created && daysBetween(r.created, TODAY) > 3;
+}
+function getBugAttention(bug) {
+  var severe=isBugSevereOpen(bug);
+  var aged=isBugAgedOpen(bug);
+  return {attention:severe||aged,severe:severe,aged:aged};
+}
+function isDevTask(task) {
+  var name=(task.title||'').trim();
+  var kind=task.kind||'';
+  return kind.indexOf('开发')>=0 || name.indexOf('开发')>=0 || name.indexOf('>前端')===0 || name.indexOf('>服务端')===0;
+}
+function isTestTask(task) {
+  var name=(task.title||'').trim();
+  var kind=task.kind||'';
+  return kind.indexOf('测试')>=0 || name.indexOf('测试')>=0 || name.indexOf('>测试')===0;
+}
+function isTaskUnstarted(task) {
+  return isActive(task.status||'',CLOSED_TASK) && !task.start && !task.done && !task.closed;
+}
+function getTaskAttention(task, reqInfo) {
+  reqInfo=reqInfo||{};
+  var overdue=isOverdue(task.deadline)&&!isTaskFinished(task);
+  var devLate=isDevTask(task) && isTaskUnstarted(task) && !!(task.assignedDate||task.created) && daysBetween(task.assignedDate||task.created,TODAY)>3;
+  var testLate=isTestTask(task) && isTaskUnstarted(task) && !!reqInfo.devDone && daysBetween(reqInfo.devDone,TODAY)>3;
+  return {
+    attention:overdue||devLate||testLate,
+    overdue:overdue,
+    devLate:devLate,
+    testLate:testLate
+  };
+}
+
+function escapeAttr(text) {
+  return String(text||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderWarnIcon(reason) {
+  return reason ? '<span class="warn-icon">!</span>' : '';
+}
+
+function renderWarnCell(reason) {
+  var tip=escapeAttr(reason);
+  return reason ? '<td class="warn-cell" title="'+tip+'">'+renderWarnIcon(reason)+'</td>' : '<td></td>';
+}
+
+function getReqAttentionReason(req, info) {
+  var attention=getReqAttention(req, info);
+  var reasons=[];
+  if(attention.deadlineMissed)reasons.push('超过预计完成日期仍未完成：'+(info.latestDeadline||'—'));
+  if(attention.notIssued)reasons.push('创建后超过3天未下发：创建日期 '+(req.created||'—'));
+  if(attention.devNotStarted)reasons.push('下发后超过3天未开始开发：下发日期 '+(req.reviewed||'—'));
+  return reasons.join('\n');
+}
+
+function getTaskAttentionReason(task, reqInfo) {
+  var attention=getTaskAttention(task, reqInfo);
+  var reasons=[];
+  if(attention.overdue)reasons.push('超过截止日期仍未完成：'+(task.deadline||'—'));
+  if(attention.devLate)reasons.push('开发任务下发后超过3天未开始：下发日期 '+(task.assignedDate||task.created||'—'));
+  if(attention.testLate)reasons.push('测试任务在开发完成后超过3天未开始：开发完成日期 '+(reqInfo.devDone||'—'));
+  return reasons.join('\n');
+}
+
+function getBugAttentionReason(bug) {
+  var attention=getBugAttention(bug);
+  var reasons=[];
+  if(attention.severe)reasons.push('严重 Bug 未关闭：严重程度 '+(bug.severity||'—'));
+  if(attention.aged)reasons.push('创建后超过3天仍未解决：创建日期 '+(bug.created||'—'));
+  return reasons.join('\n');
+}
+function getReqAttention(req, reqInfo) {
+  reqInfo=reqInfo||{};
+  var open=isReqOpen(req);
+  var devStarted=!!(reqInfo.devStart||reqInfo.devDone||reqInfo.devStartedCount);
+  var deadlineMissed=open && !!reqInfo.latestDeadline && isOverdue(reqInfo.latestDeadline);
+  var notIssued=open && !!req.created && !req.reviewed && daysBetween(req.created,TODAY)>3;
+  var devNotStarted=open && !!req.reviewed && daysBetween(req.reviewed,TODAY)>3 && !devStarted;
+  return {
+    attention:deadlineMissed||notIssued||devNotStarted,
+    deadlineMissed:deadlineMissed,
+    notIssued:notIssued,
+    devNotStarted:devNotStarted
+  };
+}
+function isRecordActiveOnDay(r, type, day) {
+  var created=r.created||'1900-01-01';
+  if(created>day)return false;
+  if(type==='req' && r.phase && /测试完毕|测试完成|已测试/.test(r.phase))return false;
+  var closedList={req:CLOSED_REQ,task:CLOSED_TASK,bug:CLOSED_BUG}[type];
+  if(r.closed)return r.closed>day;
+  return isActive(r.status, closedList);
+}
+function parseHours(h) { if(!h||h==='')return 0; var n=parseFloat(h); return isNaN(n)?0:n; }
+function getWeekStart(d) {
+  var date = d ? new Date(d) : new Date(TODAY);
+  if(isNaN(date.getTime())) return TODAY;
+  var day = date.getDay() || 7;
+  date.setDate(date.getDate() - day + 1);
+  return date.toISOString().slice(0,10);
+}
+
+// ====== CSV PARSER ======
+function parseCSV(text) {
+  var rows=[], row=[], field='', inQ=false;
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(inQ){ if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;}else{inQ=false;} }else{field+=c;} }
+    else{ if(c==='"'){inQ=true;}else if(c===','||c==='\n'||(c==='\r'&&text[i+1]==='\n')){ row.push(field.trim());field='';
+      if(c!==','){ if(row.length>1)rows.push(row); row=[]; if(c==='\r')i++; } }else{field+=c;} }
+  }
+  if(field||row.length){row.push(field.trim());if(row.length>1)rows.push(row);}
+  return rows;
+}
+
+function detectType(headers) {
+  var h=headers.join(',');
+  if(h.includes('研发需求名称'))return'req';
+  if(h.includes('Bug编号'))return'bug';
+  if(h.includes('任务名称'))return'task';
+  return null;
+}
+function detectWeeklyCSV(headers) {
+  var h=headers.join(",");
+  if(h.includes("人员")&&h.includes("本周工作内容"))return true;
+  return false;
+}
+
+
+function getFieldIdx(headers, names) {
+  for(var i=0;i<headers.length;i++){ for(var j=0;j<names.length;j++){if(headers[i]===names[j])return i;} }
+  return -1;
+}
+
+function normalizeRecords(rows, type) {
+  var headers=rows[0], records=[];
+  var idx={};
+  if(type==='req'){
+    idx.id=getFieldIdx(headers,['编号']); idx.product=getFieldIdx(headers,['所属产品']);
+    idx.title=getFieldIdx(headers,['研发需求名称']); idx.status=getFieldIdx(headers,['当前状态']);
+    idx.phase=getFieldIdx(headers,['所处阶段']); idx.priority=getFieldIdx(headers,['优先级']);
+    idx.hours=getFieldIdx(headers,['预计工时']); idx.assignee=getFieldIdx(headers,['指派给']);
+    idx.created=getFieldIdx(headers,['创建日期']); idx.reviewed=getFieldIdx(headers,['评审时间']);
+    idx.createdBy=getFieldIdx(headers,['由谁创建','创建人']); idx.reviewedBy=getFieldIdx(headers,['评审人','由谁评审']);
+    idx.closed=getFieldIdx(headers,['关闭日期']);
+  }else if(type==='task'){
+    idx.id=getFieldIdx(headers,['编号']); idx.exec=getFieldIdx(headers,['所属执行']);
+    idx.rel=getFieldIdx(headers,['相关研发需求']);
+    idx.title=getFieldIdx(headers,['任务名称']); idx.kind=getFieldIdx(headers,['任务类型']); idx.status=getFieldIdx(headers,['任务状态']);
+    idx.hours=getFieldIdx(headers,['总计消耗']); idx.remain=getFieldIdx(headers,['预计剩余']);
+    idx.estimate=getFieldIdx(headers,['最初预计','预计工时']);
+    idx.assignee=getFieldIdx(headers,['指派给']); idx.created=getFieldIdx(headers,['创建日期']);
+    idx.createdBy=getFieldIdx(headers,['由谁创建','创建人']);
+    idx.assignedDate=getFieldIdx(headers,['指派日期','下发日期']);
+    idx.deadline=getFieldIdx(headers,['截止日期']); idx.start=getFieldIdx(headers,['实际开始']); idx.done=getFieldIdx(headers,['实际完成']);
+    idx.doneBy=getFieldIdx(headers,['由谁完成']); idx.closed=getFieldIdx(headers,['关闭时间','关闭日期']);
+    idx.closedBy=getFieldIdx(headers,['由谁关闭']);
+  }else if(type==='bug'){
+    idx.id=getFieldIdx(headers,['Bug编号']); idx.product=getFieldIdx(headers,['所属产品']);
+    idx.title=getFieldIdx(headers,['Bug标题']); idx.severity=getFieldIdx(headers,['严重程度']);
+    idx.status=getFieldIdx(headers,['Bug状态']); idx.assignee=getFieldIdx(headers,['指派给']);
+    idx.createdBy=getFieldIdx(headers,['由谁创建','创建人']);
+    idx.created=getFieldIdx(headers,['创建日期']); idx.deadline=getFieldIdx(headers,['截止日期']);
+    idx.closed=getFieldIdx(headers,['关闭日期']); idx.resolved=getFieldIdx(headers,['解决日期']);
+    idx.resolvedBy=getFieldIdx(headers,['解决者','解决人','由谁解决']);
+  }
+  for(var i=1;i<rows.length;i++){
+    var r=rows[i]; if(r.length<3)continue;
+    var rec={type:type};
+    if(idx.id>=0)rec.id=r[idx.id];
+    if(type==='task'){
+      var exec=r[idx.exec]||''; rec.product=mapExecToProduct(exec);
+    }else{
+      if(idx.product>=0)rec.product=normalizeProductName(r[idx.product]);
+    }
+    if(idx.title>=0)rec.title=r[idx.title];
+    if(idx.rel>=0)rec.rel=r[idx.rel];
+    if(idx.status>=0)rec.status=r[idx.status];
+    if(idx.kind>=0)rec.kind=r[idx.kind];
+    if(idx.phase>=0)rec.phase=r[idx.phase];
+    if(idx.priority>=0)rec.priority=r[idx.priority];
+    if(idx.severity>=0)rec.severity=r[idx.severity];
+    if(idx.hours>=0)rec.hours=parseHours(r[idx.hours]);
+    if(idx.remain>=0)rec.remain=parseHours(r[idx.remain]);
+    if(idx.estimate>=0)rec.estimate=parseHours(r[idx.estimate]);
+    if(idx.assignee>=0)rec.assignee=r[idx.assignee];
+    if(idx.createdBy>=0)rec.createdBy=r[idx.createdBy];
+    if(idx.reviewedBy>=0)rec.reviewedBy=r[idx.reviewedBy];
+    if(idx.created>=0)rec.created=parseDate(r[idx.created]);
+    if(idx.assignedDate>=0)rec.assignedDate=parseDate(r[idx.assignedDate]);
+    if(idx.reviewed>=0)rec.reviewed=parseDate(r[idx.reviewed]);
+    if(idx.deadline>=0)rec.deadline=parseDate(r[idx.deadline]);
+    if(idx.start>=0)rec.start=parseDate(r[idx.start]);
+    if(idx.done>=0)rec.done=parseDate(r[idx.done]);
+    if(idx.closed>=0)rec.closed=parseDate(r[idx.closed]);
+    if(type==='task' && idx.doneBy>=0)rec.doneBy=r[idx.doneBy];
+    if(type==='task' && idx.closedBy>=0 && rec.assignee==='closed')rec.assignee=r[idx.closedBy]||rec.assignee;
+    if(idx.resolved>=0)rec.resolved=parseDate(r[idx.resolved]);
+    if(type==='bug' && idx.resolvedBy>=0)rec.resolvedBy=r[idx.resolvedBy];
+    records.push(rec);
+  }
+  return records;
+}
+
+function mapExecToProduct(exec) {
+  for(var k in PRODUCT_MAP){ if(exec&&exec.includes(k))return PRODUCT_MAP[k]; }
+  if(exec&&exec.includes('/开发'))return '';
+  return normalizeProductName((exec||'').replace(/\(.*$/,'').replace(/^\//,''));
+}
+
+function normalizePersonName(name) {
+  if(!name)return '未分配';
+  return String(name)
+    .replace(/（#[^）]*）/g,'')
+    .replace(/\(#[^)]*\)/g,'')
+    .replace(/<[^>]*>/g,'')
+    .trim() || '未分配';
+}
+
+function formatTaskTitle(task) {
+  var title=(task.title||'').trim();
+  if(title.indexOf('>')!==0)return title;
+  var child=title.replace(/^>+\s*/,'');
+  var parent=(task.parentTitle||'').trim();
+  if(!parent && task.rel)parent=String(task.rel).replace(/\(#\d+\)/,'').trim();
+  return (parent?parent+' / ':'')+child;
+}
+
+function getBugHandler(bug) {
+  var isDone=!isActive(bug.status, CLOSED_BUG);
+  return normalizePersonName((isDone && bug.resolvedBy) ? bug.resolvedBy : bug.assignee);
+}
+
+function isTaskPendingStart(task) {
+  var status=task.status||'';
+  return isActive(status,CLOSED_TASK) && !task.start && /未开始|待开始|未启动/.test(status);
+}
+
+function isTaskTodo(task) {
+  return task.type==='task' && isActive(task.status||'', CLOSED_TASK);
+}
+
+function isTaskExecutingThisWeek(task) {
+  if(task.type!=='task')return false;
+  var status=task.status||'';
+  var activeRunning=isActive(status,CLOSED_TASK) && !isTaskPendingStart(task);
+  return isThisWeek(task.start) || activeRunning || isThisWeek(task.done||task.closed);
+}
+
+function getTaskOwner(task) {
+  return normalizePersonName(task.doneBy||task.assignee);
+}
+
+function createPersonMetric(name) {
+  return {
+    name:name,
+    reqIssued:0,
+    taskIssued:0,
+    taskExecuting:0,
+    taskDone:0,
+    bugIssued:0,
+    bugResolved:0,
+    taskTodo:0,
+    bugPending:0,
+    remainingHours:0
+  };
+}
+
+function addPersonMetric(persons, name, field, amount) {
+  var person=normalizePersonName(name);
+  if(!person || person==='未分配' || /^closed$/i.test(person))return null;
+  if(!persons[person])persons[person]=createPersonMetric(person);
+  persons[person][field]+=(amount==null?1:amount);
+  return person;
+}
+
+function getPersonStatus(person) {
+  var hours=person.remainingHours||0;
+  var todo=person.taskTodo||0;
+  if(hours>35 || todo>8)return {tag:'tag-over', text:'超载'};
+  if(hours<10 && todo<=1)return {tag:'tag-idle', text:'空闲'};
+  return {tag:'tag-normal', text:'正常'};
+}
+
+function getProductRisk(pd) {
+  var riskCount=(pd.reqStale||0)+(pd.taskStale||0)+(pd.bugOverdue||0);
+  if(riskCount===0)return {status:'normal', text:'进展正常', detail:'无超过3天未处理项'};
+  var detail='需求 '+(pd.reqStale||0)+' · 任务 '+(pd.taskStale||0)+' · Bug '+(pd.bugOverdue||0);
+  if((pd.bugOverdue||0)>0 || riskCount>=3)return {status:'danger', text:'高风险', detail:detail};
+  return {status:'warn', text:'需关注', detail:detail};
+}
+
+// ====== STORE ======
+var store={ records:[], products:[], stats:null, currentProduct:null, currentView:'overview', statsDate:null };
+
+function loadRecords(records) {
+  records=records.map(expandRecord);
+  // Deduplicate by id+type
+  var seen={}, deduped=[];
+  records.forEach(function(r){
+    var key=r.type+':'+r.id;
+    if(!seen[key]){seen[key]=true;deduped.push(r);}
+  });
+  var reqProducts={};
+  deduped.forEach(function(r){
+    r.product=normalizeProductName(r.product);
+    if(r.type==='req' && r.id && r.product)reqProducts[r.id]=r.product;
+  });
+  deduped.forEach(function(r){
+    if(r.type==='task'){
+      var reqId=getRelatedReqId(r.rel);
+      if(reqId && reqProducts[reqId])r.product=reqProducts[reqId];
+    }
+  });
+  var childTaskRels={};
+  var parentTaskTitles={};
+  deduped.forEach(function(r){
+    if(r.type==='task' && r.rel && r.title && r.title.trim().indexOf('>')!==0){
+      parentTaskTitles[r.product+'|'+r.rel]=r.title.trim();
+    }
+  });
+  deduped.forEach(function(r){
+    if(r.type==='task' && r.rel && r.title && r.title.trim().indexOf('>')===0)childTaskRels[r.product+'|'+r.rel]=true;
+  });
+  deduped.forEach(function(r){
+    if(r.type==='task' && r.rel && r.title && r.title.trim().indexOf('>')===0){
+      r.parentTitle=parentTaskTitles[r.product+'|'+r.rel]||'';
+    }
+  });
+  deduped=deduped.filter(function(r){
+    if(r.type!=='task')return true;
+    if(!r.rel || !childTaskRels[r.product+'|'+r.rel])return true;
+    return r.title && r.title.trim().indexOf('>')===0;
+  });
+  store.records=deduped;
+  computeStats();
+  renderAll();
+}
+
+function inferDateFromFolder(files) {
+  if(!files || !files.length)return null;
+  var path=files[0].webkitRelativePath||files[0].name||'';
+  var folder=path.split('/')[0]||'';
+  var m=folder.match(/(20\d{2})[-_年.]?(\d{1,2})[-_月.]?(\d{1,2})/);
+  if(m)return m[1]+'-'+String(m[2]).padStart(2,'0')+'-'+String(m[3]).padStart(2,'0');
+  m=folder.match(/^(\d{1,2})(\d{2})$/);
+  if(m)return '2026-'+String(m[1]).padStart(2,'0')+'-'+String(m[2]).padStart(2,'0');
+  m=folder.match(/(\d{1,2})[-_月.](\d{1,2})/);
+  if(m)return '2026-'+String(m[1]).padStart(2,'0')+'-'+String(m[2]).padStart(2,'0');
+  return null;
+}
+function detectWeeklyCSV(headers) {
+  var h=headers.join(",");
+  if(h.includes("人员")&&h.includes("本周工作内容"))return true;
+  return false;
+}
+
+
+function setStatsDate(dateText) {
+  store.statsDate=dateText||TODAY;
+  TODAY=store.statsDate;
+  WEEK_START=getWeekStart(TODAY);
+  var label=document.getElementById('stats-date-label');
+  if(label)label.textContent='统计日期：'+store.statsDate;
+}
+
+function expandRecord(r){
+  if(r.type)return r;
+  return {
+    type:r.t,id:r.i,product:r.p,title:r.n,status:r.s,phase:r.ph,priority:r.pr,severity:r.sv,
+    hours:r.h||0,remain:r.rm||0,estimate:r.eh||0,assignee:r.a,createdBy:r.cb,reviewedBy:r.vb,created:r.c,reviewed:r.rv,assignedDate:r.ad,deadline:r.d,
+    closed:r.cl,resolved:r.rs,resolvedBy:r.rb,rel:r.rel,kind:r.kind,start:r.start,done:r.done,doneBy:r.doneBy,parentTitle:r.parentTitle
+  };
+}
+
+function computeStats() {
+  var recs=store.records;
+  var products={}, persons={};
+  var reqTaskInfo={};
+  recs.filter(function(r){return r.type==='task';}).forEach(function(t){
+    var m=(t.rel||'').match(/#(\d+)/);
+    if(!m)return;
+    var key=(t.product||'未知产品')+'::'+m[1];
+    if(!reqTaskInfo[key])reqTaskInfo[key]={latestDeadline:'',openTaskCount:0,startedTaskCount:0,devStart:'',devDone:'',devStartedCount:0};
+    if(t.deadline && (!reqTaskInfo[key].latestDeadline || t.deadline>reqTaskInfo[key].latestDeadline))reqTaskInfo[key].latestDeadline=t.deadline;
+    if(isActive(t.status,CLOSED_TASK))reqTaskInfo[key].openTaskCount++;
+    if(t.start||t.done||t.closed)reqTaskInfo[key].startedTaskCount++;
+    var taskDone=t.done||t.closed||'';
+    var taskStart=t.start||taskDone||'';
+    var taskName=(t.title||'').trim();
+    var taskKind=t.kind||'';
+    if(taskKind.indexOf('开发')>=0 || taskName.indexOf('开发')>=0){
+      if(taskStart && (!reqTaskInfo[key].devStart || taskStart<reqTaskInfo[key].devStart))reqTaskInfo[key].devStart=taskStart;
+      if(taskDone && (!reqTaskInfo[key].devDone || taskDone>reqTaskInfo[key].devDone))reqTaskInfo[key].devDone=taskDone;
+      if(taskStart)reqTaskInfo[key].devStartedCount++;
+    }
+  });
+  
+  recs.forEach(function(r){
+    var p=normalizeProductName(r.product);
+    var pd=null;
+    if(p){
+      if(!products[p])products[p]={req:0,reqActive:0,reqClosed:0,reqOverdue:0,reqWeekDone:0,reqStale:0, task:0,taskActive:0,taskClosed:0,taskOverdue:0,taskWeekDone:0,taskStale:0, bug:0,bugActive:0,bugClosed:0,bugOverdue:0,bugSevere:0,bugWeekClosed:0, persons:{}};
+      pd=products[p];
+    }
+    var closedLists={req:CLOSED_REQ,task:CLOSED_TASK,bug:CLOSED_BUG};
+    var cl=closedLists[r.type];
+    var active=isActive(r.status,cl);
+    if(r.type==='req') active=isReqOpen(r);
+    var reqInfo=reqTaskInfo[p+'::'+r.id]||{};
+    var reqAttention=getReqAttention(r,reqInfo);
+    var taskInfo=reqTaskInfo[p+'::'+((r.rel||'').match(/#(\d+)/)||[])[1]]||{};
+    var taskAttention=r.type==='task'?getTaskAttention(r,taskInfo):{attention:false};
+    var bugAttention=r.type==='bug'?getBugAttention(r):{attention:false};
+    var overdue=r.type==='req'
+      ? reqAttention.attention
+      : r.type==='task'
+        ? taskAttention.attention
+        : bugAttention.attention;
+    var weekDone=isThisWeek(r.type==='task' ? (r.done||r.closed) : r.closed);
+    
+    if(r.type==='req'){
+      if(pd){
+        pd.req++; if(active)pd.reqActive++; if(!active)pd.reqClosed++;
+        if(overdue)pd.reqOverdue++; if(weekDone)pd.reqWeekDone++;
+        if(reqAttention.attention)pd.reqStale++;
+      }
+    }else if(r.type==='task'){
+      if(pd){
+        pd.task++; if(active)pd.taskActive++; if(!active)pd.taskClosed++;
+        if(overdue)pd.taskOverdue++; if(weekDone)pd.taskWeekDone++;
+        if(taskAttention.attention)pd.taskStale++;
+      }
+    }else if(r.type==='bug'){
+      if(pd){
+        pd.bug++; if(active)pd.bugActive++; if(!active)pd.bugClosed++;
+        if(overdue)pd.bugOverdue++; if(weekDone)pd.bugWeekClosed++;
+        if(isBugSevereOpen(r))pd.bugSevere++;
+      }
+    }
+    
+    function markProductPerson(name){
+      if(!pd)return;
+      var person=normalizePersonName(name);
+      if(person && person!=='未分配' && !/^closed$/i.test(person))pd.persons[person]=true;
+    }
+    if(r.type==='req'){
+      var reqIssuedDate=r.reviewed||r.created;
+      var reqIssuer=r.reviewedBy||r.createdBy||r.assignee;
+      if(isThisWeek(reqIssuedDate)){
+        addPersonMetric(persons,reqIssuer,'reqIssued');
+      }
+    }else if(r.type==='task'){
+      var taskCreator=r.createdBy||r.assignee;
+      var taskOwner=getTaskOwner(r);
+      markProductPerson(taskOwner);
+      if(isThisWeek(r.assignedDate||r.created))addPersonMetric(persons,taskCreator,'taskIssued');
+      if(isTaskExecutingThisWeek(r))addPersonMetric(persons,taskOwner,'taskExecuting');
+      if(isThisWeek(r.done||r.closed))addPersonMetric(persons,taskOwner,'taskDone');
+      if(isTaskTodo(r))addPersonMetric(persons,taskOwner,'taskTodo');
+      if(isTaskTodo(r)){
+        var remainHours=isTaskPendingStart(r) ? (r.estimate||0) : (r.remain||0);
+        addPersonMetric(persons,taskOwner,'remainingHours',remainHours);
+      }
+    }else if(r.type==='bug'){
+      var bugCreator=r.createdBy||r.assignee;
+      var bugHandler=getBugHandler(r);
+      if(isThisWeek(r.created))addPersonMetric(persons,bugCreator,'bugIssued');
+      if(isThisWeek(r.resolved||r.closed))addPersonMetric(persons,bugHandler,'bugResolved');
+      if(active)addPersonMetric(persons,r.assignee,'bugPending');
+    }
+  });
+  
+  store.products=Object.keys(products).sort();
+  store.stats={
+    products:products,
+    persons:Object.values(persons).filter(function(p){
+      return p.reqIssued||p.taskIssued||p.taskExecuting||p.taskDone||p.bugIssued||p.bugResolved||p.taskTodo||p.bugPending||p.remainingHours;
+    }),
+    totals:{req:0,reqActive:0,reqOverdue:0,reqWeekDone:0, task:0,taskActive:0,taskOverdue:0,taskWeekDone:0, bug:0,bugActive:0,bugOverdue:0,bugSevere:0,bugWeekClosed:0}
+  };
+  
+  store.products.forEach(function(p){
+    var pd=products[p];
+    store.stats.totals.req+=pd.req; store.stats.totals.reqActive+=pd.reqActive;
+    store.stats.totals.reqOverdue+=pd.reqOverdue; store.stats.totals.reqWeekDone+=pd.reqWeekDone;
+    store.stats.totals.task+=pd.task; store.stats.totals.taskActive+=pd.taskActive;
+    store.stats.totals.taskOverdue+=pd.taskOverdue; store.stats.totals.taskWeekDone+=pd.taskWeekDone;
+    store.stats.totals.bug+=pd.bug; store.stats.totals.bugActive+=pd.bugActive;
+    store.stats.totals.bugOverdue+=pd.bugOverdue; store.stats.totals.bugSevere+=pd.bugSevere;
+    store.stats.totals.bugWeekClosed+=pd.bugWeekClosed;
+  });
+  
+  // Sort persons by current remaining workload first.
+  store.stats.persons.sort(function(a,b){return b.remainingHours-a.remainingHours;});
+}
+
+// ====== RENDERERS ======
+function renderAll() {
+  renderSidebar();
+  renderOverview();
+  if(store.currentProduct) renderProductView(store.currentProduct);
+  toggleEmpty();
+}
+
+﻿function getWeekRange() {
+  var d=new Date(TODAY);
+  var day=d.getDay();
+  var monday=new Date(d); monday.setDate(d.getDate()-(day===0?6:day-1));
+  var friday=new Date(monday); friday.setDate(monday.getDate()+4);
+  function fmt(dd){return dd.getFullYear()+"/"+(dd.getMonth()+1)+"/"+dd.getDate();}
+  return {text:fmt(monday)+"-"+fmt(friday), mon:monday, fri:friday};
+}
+
+function exportWeeklyReport() {
+  if(!store.records.length){alert("请先导入数据");return;}
+  var wr=getWeekRange();
+  var s=store;
+  var style='<style>td,th{border:1px solid #999;padding:4px 8px;vertical-align:top}.t-title{font-family:"Microsoft YaHei",sans-serif;font-size:16px;font-weight:bold;text-align:center;background:#D9E2F3}.t-section{font-family:"Microsoft YaHei",sans-serif;font-size:12px;font-weight:bold;background:#C6EFCE}.t-header{font-family:"Microsoft YaHei",sans-serif;font-size:10px;font-weight:bold;text-align:center;background:#F2F2F2}.t-body{font-family:SimSun,宋体,serif;font-size:11px;white-space:pre-line}.t-num{font-family:SimSun,宋体,serif;font-size:11px;text-align:center}.t-info{font-family:"Microsoft YaHei",sans-serif;font-size:11px;text-align:center;color:#666}</style>';
+  var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8">'+style+'</head><body>';
+
+  h+='<table><tr><td colspan="12" class="t-title">南京研发部工作周报（'+wr.text+'）</td></tr></table><br>';
+
+  var reqDev={};
+  s.records.filter(function(r){return r.type==="task";}).forEach(function(t){
+    var m=(t.rel||"").match(/#(\d+)/);
+    if(!m)return;
+    var reqId=m[1];
+    if(!reqDev[reqId])reqDev[reqId]={devDone:""};
+    var isDevTask=(t.kind||"").indexOf("开发")>=0||(t.title||"").indexOf("开发")>=0;
+    if(isDevTask){
+      var td=t.done||t.closed||"";
+      if(td&&(!reqDev[reqId].devDone||td>reqDev[reqId].devDone))reqDev[reqId].devDone=td;
+    }
+  });
+
+  function reqIsLaunched(r){return isThisWeek(r.closed)&&(r.phase==="测试完毕"||r.phase==="已关闭"||!isReqOpen(r));}
+  function reqIsTesting(r){return isReqOpen(r)&&/测试中/.test(r.phase||"");}
+  function reqIsDev(r){return isReqOpen(r)&&!/测试中|已立项|未开始|草稿/.test(r.phase||"");}
+  function reqIsPending(r){return isReqOpen(r)&&/已立项|未开始|草稿/.test(r.phase||"");}
+  function getReqDevDone(r){return reqDev[r.id]?reqDev[r.id].devDone:"";}
+
+  h+='<table><tr><td colspan="12" class="t-section">第一部分：项目研发进度</td></tr>';
+  h+='<tr class="t-header"><th>序号</th><th>项目名称</th><th>阶段</th><th>本周研发工作</th><th>下周研发工作</th><th>需求标题</th><th>编号</th><th>状态</th><th>创建日期</th><th>下发日期</th><th>开发完成日期</th><th>上线日期</th></tr>';
+
+  store.products.forEach(function(p,pi){
+    var recs=s.records.filter(function(r){return r.product===p&&r.type==="req";});
+    if(!recs.length)return;
+    recs.sort(function(a,b){return (a.created||"").localeCompare(b.created||"");});
+    var launched=recs.filter(reqIsLaunched);
+    var testing=recs.filter(reqIsTesting);
+    var dev=recs.filter(reqIsDev);
+    var pending=recs.filter(reqIsPending);
+    var weekParts=[];
+    if(launched.length)weekParts.push("本周上线需求 "+launched.length+" 个");
+    if(testing.length)weekParts.push("已提测需求 "+testing.length+" 个");
+    if(dev.length)weekParts.push("研发中需求 "+dev.length+" 个");
+    if(pending.length)weekParts.push("待开发需求 "+pending.length+" 个");
+    var weekWork=weekParts.length?weekParts.join("，")+"。" : "\u2014";
+    var nextCount=testing.length+dev.length+pending.length;
+    var nextPlan=nextCount?"继续推进剩余需求开发测试":"\u2014";
+    var activeReqs=recs.filter(function(r){return isReqOpen(r)||isThisWeek(r.closed);});
+    if(!activeReqs.length){
+      h+='<tr><td class="t-num">'+(pi+1)+'</td><td class="t-body">'+p+'</td><td class="t-body">开发</td><td class="t-body">'+weekWork+'</td><td class="t-body">'+nextPlan+'</td><td class="t-body">\u2014</td><td class="t-num">\u2014</td><td class="t-body">\u2014</td><td class="t-num">\u2014</td><td class="t-num">\u2014</td><td class="t-num">\u2014</td><td class="t-num">\u2014</td></tr>';
+      return;
+    }
+    var N=activeReqs.length;
+    activeReqs.forEach(function(r,ri){
+      if(ri===0){
+        h+='<tr><td class="t-num" rowspan="'+N+'">'+(pi+1)+'</td><td class="t-body" rowspan="'+N+'">'+p+'</td><td class="t-body" rowspan="'+N+'">开发</td><td class="t-body" rowspan="'+N+'">'+weekWork+'</td><td class="t-body" rowspan="'+N+'">'+nextPlan+'</td>';
+      }else{
+        h+='<tr>';
+      }
+      h+='<td class="t-body">'+(r.title||"\u2014")+'</td>';
+      h+='<td class="t-num">'+(r.id||"\u2014")+'</td>';
+      h+='<td class="t-body">'+(r.phase||"\u2014")+'</td>';
+      h+='<td class="t-num">'+(r.created||"\u2014")+'</td>';
+      h+='<td class="t-num">'+(r.reviewed||"\u2014")+'</td>';
+      h+='<td class="t-num">'+(getReqDevDone(r)||"\u2014")+'</td>';
+      h+='<td class="t-num">'+(r.closed||"\u2014")+'</td>';
+      h+='</tr>';
+    });
+  });
+  h+='</table><br>';
+
+  h+='<table><tr><td colspan="12" class="t-section">第二部分：其他工作</td></tr>';
+  h+='<tr class="t-header"><th>序号</th><th colspan="3">工作项</th><th>负责人</th><th colspan="4">本周工作进度</th><th colspan="3">下周工作计划</th></tr>';
+  var weeklyData=store.weeklyData||[];
+  var lqData=weeklyData.filter(function(w){return w.person==="\u674e\u5029";});
+  if(!lqData.length){
+    h+='<tr><td colspan="12" class="t-info">\u6682\u65e0\u5176\u4ed6\u5de5\u4f5c\u8bb0\u5f55\uff0c\u8bf7\u5bfc\u5165\u5305\u542b\u5468\u62a5CSV\u7684\u65e5\u671f\u6587\u4ef6\u5939</td></tr>';
+  }else{
+    lqData.forEach(function(w){
+      var workText=w.work||"";
+      var planText=w.plan||"";
+      var workLines=workText.split(/\n|\r\n|\r/);
+      var planLines=planText.split(/\n|\r\n|\r/);
+      var items=[];
+      workLines.forEach(function(line){
+        var t=line.trim();
+        if(!t)return;
+        if(/^\d+\./.test(t)){
+          items.push({title:t.replace(/^\d+\.\s*/,''), progress:[]});
+        }else if(/^[（(]/.test(t)){
+          if(items.length)items[items.length-1].progress.push(t);
+        }
+      });
+      if(!items.length){items.push({title:workText, progress:[]});}
+      items.forEach(function(item,ii){
+        h+='<tr>';
+        h+='<td class="t-num">'+(ii+1)+'</td>';
+        h+='<td class="t-body" colspan="3">'+item.title+'</td>';
+        h+='<td class="t-body">\u674e\u5029</td>';
+        h+='<td class="t-body" colspan="4">'+(item.progress.length?item.progress.join('<br>'):'\u2014')+'</td>';
+        h+='<td class="t-body" colspan="3">\u2014</td>';
+        h+='</tr>';
+      });
+    });
+  }
+  h+='</table><br>';
+
+  h+='<table><tr><td colspan="12" class="t-section">第三部分：需要协调事宜</td></tr>';
+  h+='<tr class="t-header"><th>序号</th><th colspan="4">事宜描述</th><th colspan="3">涉及方</th><th colspan="4">备注</th></tr>';
+  h+='<tr><td class="t-num">\u2014</td><td class="t-body" colspan="4">暂无</td><td class="t-body" colspan="3">\u2014</td><td class="t-body" colspan="4">\u2014</td></tr>';
+  h+='</table></body></html>';
+
+  var blob=new Blob([h],{type:"application/vnd.ms-excel;charset=utf-8"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a"); a.href=url; a.download="南京研发部工作周报_"+wr.text.replace(/\d{4}\//g,"").replace(/\//g,"")+".xls";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function toggleEmpty() {
+  document.getElementById('empty-state').style.display=store.records.length===0?'block':'none';
+}
+
+function renderSidebar() {
+  var nav=document.getElementById('sidebar-nav');
+  var prods=store.products;
+  var html='<div class="nav-item'+(store.currentView==='overview'?' active':'')+'" onclick="switchView(\'overview\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>总览视图</span></div>';
+  html+='<div class="nav-item nav-parent'+(store.currentView==='product'?' active open':'')+'" onclick="toggleSubNav(this)" id="nav-product"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg><span>单产品视图</span><svg class="nav-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>';
+  html+='<div class="nav-sub" id="nav-sub-product">';
+  prods.forEach(function(p,i){
+    var active=store.currentView==='product'&&store.currentProduct===p;
+    html+='<div class="nav-sub-item'+(active?' active':'')+'" onclick="event.stopPropagation();switchView(\'product\');switchProduct(\''+p.replace(/'/g,"\\'")+'\')">'+p+'</div>';
+  });
+  html+='</div>';
+  nav.innerHTML=html;
+}
+
+function renderOverview() {
+  var s=store.stats; if(!s)return;
+  var t=s.totals;
+  var overload=s.persons.filter(function(p){return getPersonStatus(p).text==='超载'}).length;
+  var idle=s.persons.filter(function(p){return getPersonStatus(p).text==='空闲'}).length;
+  
+  document.getElementById('overview-kpi').innerHTML=
+    '<div class="kpi-card" data-tip="活跃产品汇总：可在左侧切换查看各产品详情"><div class="kpi-header"><span class="kpi-label">活跃产品</span><span class="kpi-icon">📦</span></div><div class="kpi-value">'+store.products.length+'</div><div class="kpi-sub">已接入产品汇总</div></div>'+
+    '<div class="kpi-card warn"><div class="kpi-header"><span class="kpi-label">活跃需求</span><span class="kpi-icon">📝</span></div><div class="kpi-value">'+t.reqActive+'</div><div class="kpi-sub"><span class="dot warn"></span>重点关注 '+t.reqOverdue+' 个<span class="weekly-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>本周完成 '+t.reqWeekDone+'</span></div></div>'+
+    '<div class="kpi-card warn"><div class="kpi-header"><span class="kpi-label">活跃任务</span><span class="kpi-icon">✅</span></div><div class="kpi-value">'+t.taskActive+'</div><div class="kpi-sub"><span class="dot warn"></span>重点关注 '+t.taskOverdue+' 个<span class="weekly-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>本周完成 '+t.taskWeekDone+'</span></div></div>'+
+    '<div class="kpi-card danger"><div class="kpi-header"><span class="kpi-label">活跃 Bug</span><span class="kpi-icon">🐛</span></div><div class="kpi-value">'+t.bugActive+'</div><div class="kpi-sub"><span class="dot danger"></span>重点关注 '+t.bugOverdue+' 个<span class="weekly-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>本周关闭 '+t.bugWeekClosed+'</span></div></div>'+
+    '<div class="kpi-card"><div class="kpi-header"><span class="kpi-label">研发人力</span><span class="kpi-icon">👥</span></div><div class="kpi-value">'+s.persons.length+'</div><div class="kpi-sub">超载 <span style="color:var(--danger);font-weight:500">'+overload+'</span> 人 · 空闲 <span style="color:var(--success);font-weight:500">'+idle+'</span> 人</div></div>';
+  
+  // Trend chart placeholder
+  renderOverviewTrendChart();
+  
+  // Product list
+  document.getElementById('product-count-label').textContent=store.products.length+' 个活跃产品';
+  var plHtml='';
+  store.products.forEach(function(p){
+    var pd=s.products[p]; var pct=pd.req>0?Math.round(pd.reqClosed/pd.req*100):0;
+    var risk=getProductRisk(pd);
+    plHtml+='<div class="product-item" onclick="switchView(\'product\');switchProduct(\''+p.replace(/'/g,"\\'")+'\')"><div class="prod-name">'+p+'</div><div class="prod-meta">'+
+      '<div class="meta-item"><div class="val">'+pd.reqActive+'</div><div class="lbl">活跃需求</div><div class="weekly">重点关注 '+(pd.reqStale||0)+' · 本周完成 '+pd.reqWeekDone+'</div><div class="mini-bar"><div class="mini-bar-fill" style="width:'+pct+'%"></div></div></div>'+
+      '<div class="meta-item"><div class="val">'+pd.taskActive+'</div><div class="lbl">活跃任务</div><div class="weekly">重点关注 '+(pd.taskStale||0)+' · 本周完成 '+pd.taskWeekDone+'</div><div class="mini-bar"><div class="mini-bar-fill" style="width:'+Math.round(pd.task>0?pd.taskClosed/pd.task*100:0)+'%"></div></div></div>'+
+      '<div class="meta-item"><div class="val" style="color:'+(pd.bugOverdue>0?'var(--danger)':'')+'">'+pd.bugActive+'</div><div class="lbl">活跃Bug</div><div class="weekly">重点关注 '+pd.bugOverdue+' · 本周关闭 '+pd.bugWeekClosed+'</div><div class="mini-bar"><div class="mini-bar-fill" style="width:'+Math.round(pd.bug>0?pd.bugClosed/pd.bug*100:0)+'%;background:var(--danger)"></div></div></div>'+
+      '<div class="meta-item"><div class="val">'+Object.keys(pd.persons).length+'</div><div class="lbl">参与人</div></div></div><div class="prod-status '+risk.status+'" title="'+risk.detail+'">'+risk.text+'</div></div>';
+  });
+  document.getElementById('product-list').innerHTML=plHtml;
+  
+  // Person table
+  document.getElementById('person-count-label').textContent=s.persons.length+' 人';
+  var ptHtml='<table><thead><tr><th>姓名</th><th>本周下发需求</th><th>本周下发任务</th><th>本周执行任务</th><th>本周完成任务</th><th>本周下发Bug</th><th>本周解决Bug</th><th>待完成任务</th><th>待解决Bug</th><th>预计剩余工时(h)</th><th>状态</th></tr></thead><tbody>';
+  s.persons.forEach(function(p){
+    var hours=Number((p.remainingHours||0).toFixed(1));
+    var status=getPersonStatus(p);
+    ptHtml+='<tr><td>'+p.name+'</td><td>'+p.reqIssued+'</td><td>'+p.taskIssued+'</td><td>'+p.taskExecuting+'</td><td style="color:var(--success)">'+p.taskDone+'</td><td>'+p.bugIssued+'</td><td style="color:var(--success)">'+p.bugResolved+'</td><td>'+p.taskTodo+'</td><td>'+p.bugPending+'</td><td>'+hours+'</td><td><span class="tag '+status.tag+'">'+status.text+'</span></td></tr>';
+  });
+  ptHtml+='</tbody></table>';
+  document.getElementById('person-table').innerHTML=ptHtml;
+}
+
+function buildTrendData() {
+  var days=[];
+  for(var i=29;i>=0;i--){
+    var d=new Date(TODAY);
+    d.setDate(d.getDate()-i);
+    var ds=d.toISOString().slice(0,10);
+    var req=0, task=0, bug=0;
+    store.records.forEach(function(r){
+      if(r.type==='req' && isRecordActiveOnDay(r,'req',ds)) req++;
+      if(r.type==='task' && isRecordActiveOnDay(r,'task',ds)) task++;
+      if(r.type==='bug' && isRecordActiveOnDay(r,'bug',ds)) bug++;
+    });
+    days.push({
+      date:ds,
+      req:req,
+      task:task,
+      bug:bug
+    });
+  }
+  return days;
+}
+
+function renderOverviewTrendChart(){
+  var data=buildTrendData();
+  var w=600,h=150,left=40,right=18,top=12,plotH=92;
+  var maxVal=Math.max.apply(null,data.map(function(d){return Math.max(d.req,d.task,d.bug);}));
+  function x(i){return left+i*(w-left-right)/(data.length-1);}
+  function y(v){return top+(maxVal-v)/Math.max(1,maxVal)*plotH;}
+  function pts(key){return data.map(function(d,i){return x(i).toFixed(1)+','+y(d[key]).toFixed(1);}).join(' ');}
+  var ticks=[0,7,14,21,29].map(function(i){
+    return '<text x="'+x(i).toFixed(1)+'" y="132" fill="var(--text3)" font-size="10" text-anchor="middle">'+data[i].date.slice(5)+'</text>';
+  }).join('');
+  var hit=data.map(function(d,i){
+    var xi=x(i);
+    return '<rect x="'+(xi-8).toFixed(1)+'" y="0" width="16" height="120" fill="transparent" onmousemove="showTrendTip(event,'+i+')" onmouseleave="hideTrendTip()"/>';
+  }).join('');
+  document.getElementById('overview-trend-chart').innerHTML='<div class="trend-wrap"><svg class="sparkline" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none"><line x1="'+left+'" y1="'+(top+plotH)+'" x2="'+(w-right)+'" y2="'+(top+plotH)+'" stroke="var(--border)" stroke-width="0.5"/><line x1="'+left+'" y1="'+(top+plotH/2)+'" x2="'+(w-right)+'" y2="'+(top+plotH/2)+'" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="4,4"/><polyline points="'+pts('req')+'" stroke="var(--accent)" stroke-width="2.5" fill="none"/><polyline points="'+pts('task')+'" stroke="var(--warn)" stroke-width="2.5" fill="none"/><polyline points="'+pts('bug')+'" stroke="var(--danger)" stroke-width="2.5" fill="none"/>'+ticks+'<line id="trend-hover-line" class="trend-hover-line" y1="'+top+'" y2="'+(top+plotH)+'"/>'+hit+'</svg><div id="trend-tooltip" class="trend-tooltip"></div></div>';
+  window.__trendData=data;
+}
+
+function buildProductTrendData(recs, type) {
+  var days=[];
+  for(var i=29;i>=0;i--){
+    var d=new Date(TODAY);
+    d.setDate(d.getDate()-i);
+    var ds=d.toISOString().slice(0,10);
+    var count=0;
+    recs.forEach(function(r){
+      if(r.type!==type)return;
+      if(isRecordActiveOnDay(r,type,ds))count++;
+    });
+    days.push({date:ds,count:count});
+  }
+  return days;
+}
+
+function renderMiniTrendChart(data, color, label){
+  var w=380,h=100,left=30,right=12,top=10,plotH=56;
+  var maxVal=Math.max.apply(null,data.map(function(d){return d.count;}));
+  function x(i){return left+i*(w-left-right)/(data.length-1);}
+  function y(v){return top+(maxVal-v)/Math.max(1,maxVal)*plotH;}
+  function pts(){return data.map(function(d,i){return x(i).toFixed(1)+','+y(d.count).toFixed(1);}).join(' ');}
+  var ticks=[0,7,14,21,29].map(function(i){
+    return '<text x="'+x(i).toFixed(1)+'" y="88" fill="var(--text3)" font-size="9" text-anchor="middle">'+data[i].date.slice(5)+'</text>';
+  }).join('');
+  return '<div class="trend-wrap" style="height:100px"><svg class="sparkline" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">'+
+    '<line x1="'+left+'" y1="'+(top+plotH)+'" x2="'+(w-right)+'" y2="'+(top+plotH)+'" stroke="var(--border)" stroke-width="0.5"/>'+
+    '<polyline points="'+pts()+'" stroke="'+color+'" stroke-width="2.5" fill="none"/>'+ticks+
+    '</svg></div>';
+}
+
+function renderDualTrendChart(firstData, secondData, firstColor, secondColor){
+  var w=380,h=100,left=30,right=12,top=10,plotH=56;
+  var maxVal=Math.max.apply(null,firstData.concat(secondData).map(function(d){return d.count;}));
+  function x(i){return left+i*(w-left-right)/(firstData.length-1);}
+  function y(v){return top+(maxVal-v)/Math.max(1,maxVal)*plotH;}
+  function pts(data){return data.map(function(d,i){return x(i).toFixed(1)+','+y(d.count).toFixed(1);}).join(' ');}
+  var ticks=[0,7,14,21,29].map(function(i){
+    return '<text x="'+x(i).toFixed(1)+'" y="88" fill="var(--text3)" font-size="9" text-anchor="middle">'+firstData[i].date.slice(5)+'</text>';
+  }).join('');
+  return '<div class="trend-wrap" style="height:100px"><svg class="sparkline" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">'+
+    '<line x1="'+left+'" y1="'+(top+plotH)+'" x2="'+(w-right)+'" y2="'+(top+plotH)+'" stroke="var(--border)" stroke-width="0.5"/>'+
+    '<polyline points="'+pts(firstData)+'" stroke="'+firstColor+'" stroke-width="2.5" fill="none"/>'+
+    '<polyline points="'+pts(secondData)+'" stroke="'+secondColor+'" stroke-width="2.5" fill="none"/>'+ticks+
+    '</svg></div>';
+}
+
+function renderProductTrendCharts(recs){
+  var reqData=buildProductTrendData(recs,'req');
+  var taskData=buildProductTrendData(recs,'task');
+  var bugData=buildProductTrendData(recs,'bug');
+  document.getElementById('product-charts').style.gridTemplateColumns='1fr';
+  document.getElementById('product-charts').innerHTML=
+    '<div class="chart-panel"><div class="chart-title">活跃需求 / 任务 / Bug 趋势<span class="sub">近 30 天</span></div><div class="legend"><div class="legend-item"><div class="legend-dot blue"></div>活跃需求</div><div class="legend-item"><div class="legend-dot yellow"></div>活跃任务</div><div class="legend-item"><div class="legend-dot red"></div>活跃Bug</div></div><div id="product-trend-chart"></div></div>';
+  renderProductCombinedTrendChart(reqData,taskData,bugData);
+}
+
+function renderProductCombinedTrendChart(reqData,taskData,bugData){
+  var data=reqData.map(function(d,i){return {date:d.date,req:d.count,task:taskData[i].count,bug:bugData[i].count};});
+  var w=600,h=150,left=40,right=18,top=12,plotH=92;
+  var maxVal=Math.max.apply(null,data.map(function(d){return Math.max(d.req,d.task,d.bug);}));
+  function x(i){return left+i*(w-left-right)/(data.length-1);}
+  function y(v){return top+(maxVal-v)/Math.max(1,maxVal)*plotH;}
+  function pts(key){return data.map(function(d,i){return x(i).toFixed(1)+','+y(d[key]).toFixed(1);}).join(' ');}
+  var ticks=[0,7,14,21,29].map(function(i){
+    return '<text x="'+x(i).toFixed(1)+'" y="132" fill="var(--text3)" font-size="10" text-anchor="middle">'+data[i].date.slice(5)+'</text>';
+  }).join('');
+  var hit=data.map(function(d,i){
+    var xi=x(i);
+    return '<rect x="'+(xi-8).toFixed(1)+'" y="0" width="16" height="120" fill="transparent" onmousemove="showProductTrendTip(event,'+i+')" onmouseleave="hideProductTrendTip()"/>';
+  }).join('');
+  document.getElementById('product-trend-chart').innerHTML='<div class="trend-wrap"><svg class="sparkline" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none"><line x1="'+left+'" y1="'+(top+plotH)+'" x2="'+(w-right)+'" y2="'+(top+plotH)+'" stroke="var(--border)" stroke-width="0.5"/><line x1="'+left+'" y1="'+(top+plotH/2)+'" x2="'+(w-right)+'" y2="'+(top+plotH/2)+'" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="4,4"/><polyline points="'+pts('req')+'" stroke="var(--accent)" stroke-width="2.5" fill="none"/><polyline points="'+pts('task')+'" stroke="var(--warn)" stroke-width="2.5" fill="none"/><polyline points="'+pts('bug')+'" stroke="var(--danger)" stroke-width="2.5" fill="none"/>'+ticks+'<line id="product-trend-hover-line" class="trend-hover-line" y1="'+top+'" y2="'+(top+plotH)+'"/>'+hit+'</svg><div id="product-trend-tooltip" class="trend-tooltip"></div></div>';
+  window.__productTrendData=data;
+}
+
+function showProductTrendTip(evt,idx){
+  var d=window.__productTrendData&&window.__productTrendData[idx]; if(!d)return;
+  var wrap=document.querySelector('#product-trend-chart .trend-wrap');
+  var tip=document.getElementById('product-trend-tooltip');
+  var line=document.getElementById('product-trend-hover-line');
+  var rect=wrap.getBoundingClientRect();
+  var localX=evt.clientX-rect.left;
+  tip.innerHTML='<div class="date">'+d.date+'</div><div class="req">活跃需求：'+d.req+'</div><div class="task">活跃任务：'+d.task+'</div><div class="bug">活跃Bug：'+d.bug+'</div>';
+  tip.style.display='block';
+  tip.style.left=Math.min(Math.max(8,localX+12),rect.width-170)+'px';
+  line.style.display='block';
+  line.setAttribute('x1',evt.offsetX);
+  line.setAttribute('x2',evt.offsetX);
+}
+
+function hideProductTrendTip(){
+  var tip=document.getElementById('product-trend-tooltip'); if(tip)tip.style.display='none';
+  var line=document.getElementById('product-trend-hover-line'); if(line)line.style.display='none';
+}
+
+function showTrendTip(evt,idx){
+  var d=window.__trendData&&window.__trendData[idx]; if(!d)return;
+  var wrap=document.querySelector('#overview-trend-chart .trend-wrap');
+  var tip=document.getElementById('trend-tooltip');
+  var line=document.getElementById('trend-hover-line');
+  var rect=wrap.getBoundingClientRect();
+  var localX=evt.clientX-rect.left;
+  tip.innerHTML='<div class="date">'+d.date+'</div><div class="req">活跃需求：'+d.req+'</div><div class="task">活跃任务：'+d.task+'</div><div class="bug">活跃Bug：'+d.bug+'</div>';
+  tip.style.display='block';
+  tip.style.left=Math.min(Math.max(8,localX+12),rect.width-170)+'px';
+  line.style.display='block';
+  line.setAttribute('x1',evt.offsetX);
+  line.setAttribute('x2',evt.offsetX);
+}
+
+function hideTrendTip(){
+  var tip=document.getElementById('trend-tooltip'); if(tip)tip.style.display='none';
+  var line=document.getElementById('trend-hover-line'); if(line)line.style.display='none';
+}
+
+function renderProductView(productName) {
+  store.currentProduct=productName;
+  var pd=store.stats.products[productName];
+  if(!pd)return;
+  var recs=store.records.filter(function(r){return r.product===productName;});
+  
+  // KPI cards
+  var reqPct=pd.req>0?Math.round(pd.reqClosed/pd.req*100):0;
+  var taskPct=pd.task>0?Math.round(pd.taskClosed/pd.task*100):0;
+  var bugPct=pd.bug>0?Math.round(pd.bugClosed/pd.bug*100):0;
+  document.getElementById('product-kpi').innerHTML=
+    '<div class="kpi-card warn"><div class="kpi-header"><span class="kpi-label">活跃需求</span><span class="kpi-icon">📝</span></div><div class="kpi-value">'+pd.reqActive+'</div><div class="kpi-sub"><span class="dot warn"></span>重点关注 '+pd.reqOverdue+' 个<span class="weekly-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>本周完成 '+pd.reqWeekDone+'</span></div><div style="height:4px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden"><div style="height:100%;width:'+reqPct+'%;background:var(--accent);border-radius:2px"></div></div></div>'+
+    '<div class="kpi-card warn"><div class="kpi-header"><span class="kpi-label">活跃任务</span><span class="kpi-icon">✅</span></div><div class="kpi-value">'+pd.taskActive+'</div><div class="kpi-sub"><span class="dot warn"></span>重点关注 '+pd.taskOverdue+' 个<span class="weekly-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>本周完成 '+pd.taskWeekDone+'</span></div><div style="height:4px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden"><div style="height:100%;width:'+taskPct+'%;background:var(--accent);border-radius:2px"></div></div></div>'+
+    '<div class="kpi-card danger"><div class="kpi-header"><span class="kpi-label">活跃 Bug</span><span class="kpi-icon">🐛</span></div><div class="kpi-value">'+pd.bugActive+'</div><div class="kpi-sub"><span class="dot danger"></span>重点关注 '+pd.bugOverdue+' 个<span class="weekly-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>本周关闭 '+pd.bugWeekClosed+'</span></div><div style="height:4px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden"><div style="height:100%;width:'+bugPct+'%;background:var(--danger);border-radius:2px"></div></div></div>';
+  
+  renderProductTrendCharts(recs);
+  
+  // Detail panels
+  var tasks=recs.filter(function(r){return r.type==='task'&&(isActive(r.status,CLOSED_TASK)||isThisWeek(r.done||r.closed));})
+    .sort(function(a,b){return (a.created||'9999-12-31').localeCompare(b.created||'9999-12-31');});
+  var bugs=recs.filter(function(r){return r.type==='bug'&&(isActive(r.status,CLOSED_BUG)||isThisWeek(r.closed));})
+    .sort(function(a,b){return (a.created||'9999-12-31').localeCompare(b.created||'9999-12-31');});
+  
+  var taskWeek=recs.filter(function(r){return r.type==='task'&&isThisWeek(r.done||r.closed);}).length;
+  var bugWeek=recs.filter(function(r){return r.type==='bug'&&isThisWeek(r.closed);}).length;
+  
+  // Get task executors and completion dates for each requirement.
+  // Key comes from task "相关研发需求" field, which usually contains "(#需求编号)".
+  var reqTaskInfo={};
+  recs.filter(function(r){return r.type==='task';}).forEach(function(t){
+    var m=(t.rel||'').match(/#(\d+)/);
+    if(!m)return;
+    var reqId=m[1];
+    if(!reqTaskInfo[reqId])reqTaskInfo[reqId]={executors:[],devStart:'',devDone:'',testStart:'',testDone:'',latestDeadline:'',taskCount:0,openTaskCount:0,hours:0,remain:0};
+    var executor=normalizePersonName(t.doneBy||t.assignee);
+    if(executor && executor!=='未分配' && !/^closed$/i.test(executor) && !reqTaskInfo[reqId].executors.includes(executor))reqTaskInfo[reqId].executors.push(executor);
+    var taskDone=t.done||t.closed||'';
+    var taskStart=t.start||taskDone||'';
+    var name=(t.title||'').trim();
+    var kind=t.kind||'';
+    reqTaskInfo[reqId].hours+=(t.hours||0);
+    reqTaskInfo[reqId].remain+=(t.remain||0);
+    reqTaskInfo[reqId].taskCount++;
+    if(isActive(t.status,CLOSED_TASK))reqTaskInfo[reqId].openTaskCount++;
+    if(t.deadline && (!reqTaskInfo[reqId].latestDeadline || t.deadline>reqTaskInfo[reqId].latestDeadline))reqTaskInfo[reqId].latestDeadline=t.deadline;
+    if(kind.indexOf('开发')>=0 || name.indexOf('开发')>=0){
+      if(taskStart && (!reqTaskInfo[reqId].devStart || taskStart<reqTaskInfo[reqId].devStart))reqTaskInfo[reqId].devStart=taskStart;
+      if(!reqTaskInfo[reqId].devDone || taskDone>reqTaskInfo[reqId].devDone)reqTaskInfo[reqId].devDone=taskDone;
+    }
+    if(kind.indexOf('测试')>=0 || name.indexOf('测试')>=0 || name.indexOf('>测试')===0){
+      if(taskStart && (!reqTaskInfo[reqId].testStart || taskStart<reqTaskInfo[reqId].testStart))reqTaskInfo[reqId].testStart=taskStart;
+      if(!reqTaskInfo[reqId].testDone || taskDone>reqTaskInfo[reqId].testDone)reqTaskInfo[reqId].testDone=taskDone;
+    }
+  });
+
+  var reqWeekIds={};
+  var reqs=recs.filter(function(r){
+    if(r.type!=='req')return false;
+    var info=reqTaskInfo[r.id]||{};
+    var isWeeklyTestDone=isThisWeek(info.testDone);
+    var isWeeklyClosed=isThisWeek(r.closed);
+    if(isWeeklyTestDone||isWeeklyClosed)reqWeekIds[r.id]=true;
+    var isLive=isReqOpen(r);
+    return isLive||isWeeklyTestDone||isWeeklyClosed;
+  }).sort(function(a,b){return (a.created||'9999-12-31').localeCompare(b.created||'9999-12-31');});
+  var reqWeek=Object.keys(reqWeekIds).length;
+  
+  var detailsHtml='';
+  // Requirements panel
+  detailsHtml+='<div class="detail-panel"><div class="panel-header open" onclick="togglePanel(this)"><div class="panel-title">活跃需求清单 <span class="panel-count">'+reqs.length+' 条（重点关注 '+pd.reqOverdue+' · 本周完成 '+pd.reqWeekDone+'）</span></div><svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div><div class="panel-body open"><div style="overflow-x:auto"><table><thead><tr><th></th><th>编号</th><th>标题</th><th>阶段</th><th>执行人</th><th>创建日期</th><th>下发日期</th><th>开始开发日期</th><th>开发完成日期</th><th>提测日期</th><th>测试完成日期</th><th>关闭日期</th><th>预计完成日期</th><th>预计工时</th><th>已消耗工时</th><th>剩余工时</th></tr></thead><tbody>';
+  reqs.slice(0,100).forEach(function(r){
+    var info=reqTaskInfo[r.id]||{executors:[],devStart:'',devDone:'',testStart:'',testDone:'',latestDeadline:'',taskCount:0,openTaskCount:0,hours:0,remain:0};
+    var warnReason=getReqAttentionReason(r,info);
+    var executorText=info.executors.length?info.executors.join('、'):'—';
+    var estimate=r.hours||0;
+    var consumed=Number((info.hours||0).toFixed(1));
+    var remain=Number((info.remain||0).toFixed(1));
+    detailsHtml+='<tr>'+renderWarnCell(warnReason)+'<td style="color:var(--accent)">'+(r.id||'')+'</td><td>'+(r.title||'').substring(0,40)+'</td><td>'+(r.phase||'—')+'</td><td>'+executorText+'</td><td>'+(r.created||'')+'</td><td>'+(r.reviewed||'—')+'</td><td>'+(info.devStart||'—')+'</td><td>'+(info.devDone||'—')+'</td><td>'+(info.testStart||'—')+'</td><td>'+(info.testDone||'—')+'</td><td>'+(r.closed||'—')+'</td><td>'+(info.latestDeadline||'—')+'</td><td>'+estimate+'h</td><td>'+consumed+'h</td><td>'+remain+'h</td></tr>';
+  });
+  if(reqs.length>100)detailsHtml+='<tr><td colspan="16" style="text-align:center;color:var(--text2)">… 仅显示前 100 条，共 '+reqs.length+' 条</td></tr>';
+  detailsHtml+='</tbody></table></div></div></div>';
+  
+  // Tasks panel
+  detailsHtml+='<div class="detail-panel"><div class="panel-header" onclick="togglePanel(this)"><div class="panel-title">活跃任务清单 <span class="panel-count">'+tasks.length+' 条（重点关注 '+pd.taskOverdue+' · 本周完成 '+pd.taskWeekDone+'）</span></div><svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div><div class="panel-body"><div style="overflow-x:auto"><table><thead><tr><th></th><th>编号</th><th>标题</th><th>状态</th><th>负责人</th><th>创建日期</th><th>下发日期</th><th>预计完成日期</th><th>实际开始日期</th><th>完成日期</th><th>关闭日期</th><th>预计工时</th><th>已消耗工时</th><th>剩余工时</th></tr></thead><tbody>';
+  tasks.slice(0,100).forEach(function(r){
+    var reqId=((r.rel||'').match(/#(\d+)/)||[])[1];
+    var warnReason=getTaskAttentionReason(r,reqTaskInfo[reqId]||{});
+    var owner=normalizePersonName(r.doneBy||r.assignee);
+    var estimate=r.estimate?Number((r.estimate||0).toFixed(1))+'h':'—';
+    var consumed=Number((r.hours||0).toFixed(1))+'h';
+    var remain=Number((r.remain||0).toFixed(1))+'h';
+    detailsHtml+='<tr>'+renderWarnCell(warnReason)+'<td style="color:var(--accent)">'+(r.id||'')+'</td><td>'+formatTaskTitle(r).substring(0,56)+'</td><td>'+(r.status||'')+'</td><td>'+owner+'</td><td>'+(r.created||'')+'</td><td>'+(r.assignedDate||'—')+'</td><td>'+(r.deadline||'—')+'</td><td>'+(r.start||'—')+'</td><td>'+(r.done||'—')+'</td><td>'+(r.closed||'—')+'</td><td>'+estimate+'</td><td>'+consumed+'</td><td>'+remain+'</td></tr>';
+  });
+  if(tasks.length>100)detailsHtml+='<tr><td colspan="14" style="text-align:center;color:var(--text2)">… 仅显示前 100 条，共 '+tasks.length+' 条</td></tr>';
+  detailsHtml+='</tbody></table></div></div></div>';
+  
+  // Bugs panel
+  detailsHtml+='<div class="detail-panel"><div class="panel-header" onclick="togglePanel(this)"><div class="panel-title">活跃 Bug 清单 <span class="panel-count">'+bugs.length+' 条（重点关注 '+pd.bugOverdue+' · 本周关闭 '+pd.bugWeekClosed+'）</span></div><svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div><div class="panel-body"><div style="overflow-x:auto"><table><thead><tr><th></th><th>编号</th><th>标题</th><th>处理人</th><th>创建日期</th><th>状态</th><th>严重程度</th><th>截止日期</th><th>关闭日期</th></tr></thead><tbody>';
+  bugs.slice(0,100).forEach(function(r){
+    var warnReason=getBugAttentionReason(r);
+    var sevClass=r.severity==='1'||r.severity==='2'?'severity-high':r.severity==='3'?'severity-mid':'';
+    var sevMap={'1':'致命','2':'严重','3':'一般','4':'建议'};
+    detailsHtml+='<tr>'+renderWarnCell(warnReason)+'<td style="color:var(--accent)">'+(r.id||'')+'</td><td>'+(r.title||'').substring(0,50)+'</td><td>'+getBugHandler(r)+'</td><td>'+(r.created||'')+'</td><td>'+(r.status||'')+'</td><td class="'+(sevClass)+'">'+(sevMap[r.severity]||r.severity||'')+'</td><td>'+(r.deadline||'—')+'</td><td>'+(r.closed||'—')+'</td></tr>';
+  });
+  if(bugs.length>100)detailsHtml+='<tr><td colspan="9" style="text-align:center;color:var(--text2)">… 仅显示前 100 条，共 '+bugs.length+' 条</td></tr>';
+  detailsHtml+='</tbody></table></div></div></div>';
+  
+  document.getElementById('product-details').innerHTML=detailsHtml;
+}
+
+// ====== VIEW SWITCHING ======
+function switchView(view) {
+  store.currentView=view;
+  var parentNav=document.getElementById('nav-product');
+  document.querySelectorAll('.nav-item:not(.nav-parent)').forEach(function(n){n.classList.remove('active')});
+  if(view==='product'){
+    parentNav.classList.add('active','open');
+  }else{
+    parentNav.classList.remove('active','open');
+    document.querySelectorAll('.nav-item:not(.nav-parent)').forEach(function(n){
+      if(n.textContent.trim().includes('总览'))n.classList.add('active');
+    });
+  }
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active')});
+  document.getElementById('view-'+view).classList.add('active');
+  var prodName=store.currentProduct||store.products[0]||'';
+  document.getElementById('breadcrumb-page').textContent=view==='product'?'单产品视图 — '+prodName:'总览视图';
+  renderSidebar();
+  if(view==='product'&&!store.currentProduct&&store.products.length>0){
+    switchProduct(store.products[0]);
+  }
+}
+
+function switchProduct(prod) {
+  store.currentProduct=prod;
+  document.querySelectorAll('.nav-sub-item').forEach(function(t){t.classList.remove('active')});
+  var items=document.querySelectorAll('.nav-sub-item');
+  items.forEach(function(t){if(t.textContent.trim()===prod)t.classList.add('active');});
+  document.getElementById('breadcrumb-page').textContent='单产品视图 — '+prod;
+  renderProductView(prod);
+}
+
+function toggleSubNav(el){ el.classList.toggle('open'); }
+function togglePanel(el){ el.classList.toggle('open'); el.nextElementSibling.classList.toggle('open'); }
+
+// ====== FILE HANDLING ======
+function handleFiles(files) {
+  var allRecords=[], pending=files.length;
+  setStatsDate(inferDateFromFolder(files));
+  Array.from(files).forEach(function(file){
+    if(!/\.csv$/i.test(file.name)){
+      pending--;
+      if(pending===0)loadRecords(allRecords);
+      return;
+    }
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var text=e.target.result;
+      // Auto-detect encoding: try UTF-8 first
+      var rows=parseCSV(text);
+      if(rows.length<2){ text=decodeGB18030(e.target.result); rows=parseCSV(text); }
+      var type=detectType(rows[0]);
+      if(type){
+        var recs=normalizeRecords(rows,type);
+        allRecords=allRecords.concat(recs);
+      }else if(detectWeeklyCSV(rows[0])){
+        var weekly=[];
+        for(var wi=1;wi<rows.length;wi++){
+          var r=rows[wi];
+          if(r.length>=4)weekly.push({person:r[0]||"",role:r[1]||"",work:r[2]||"",plan:r[3]||""});
+        }
+        store.weeklyData=weekly;
+      }
+      pending--;
+      if(pending===0){ loadRecords(allRecords); }
+    };
+    reader.readAsText(file,'UTF-8');
+  });
+}
+
+function decodeGB18030(buffer) {
+  // Attempt GB18030 decode via Blob
+  return buffer; // Browser handles encoding via readAsText
+}
+
+function loadEmbedded() {
+  if(typeof EMBEDDED_DATA!=='undefined'){
+    setStatsDate('2026-05-29');
+    loadRecords(EMBEDDED_DATA);
+    document.getElementById('sidebar-footer').textContent=store.records.length+' 条记录';
+  }
+}
+
+function clearData() {
+  store.records=[]; store.products=[]; store.stats=null; store.currentProduct=null; store.weeklyData=null;
+  store.statsDate=null;
+  renderAll();
+  var label=document.getElementById('stats-date-label');
+  if(label)label.textContent='统计日期：未选择';
+  document.getElementById('sidebar-footer').textContent='就绪';
+}
+
+// Init
+toggleEmpty();
+</script>
+<script src='data.js'></script>
+
+
+
 </body>
 </html>

@@ -26,7 +26,6 @@ jobs:
           rm -rf deploy
           mkdir deploy
           cp index.html deploy/index.html
-          cp index-v2.html deploy/index-v2.html
           cp data.js deploy/data.js
           touch deploy/.nojekyll
 
