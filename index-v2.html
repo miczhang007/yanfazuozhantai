@@ -148,6 +148,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
     <label class="btn" style="cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>导入日期文件夹<input type="file" id="csv-input" multiple webkitdirectory directory accept=".csv" style="display:none" onchange="handleFiles(this.files)"></label>
     <button class="btn" onclick="loadEmbedded()">加载示例数据</button>
     <button class="btn" onclick="clearData()">清空</button>
+    <button class="btn btn-export" onclick="exportWeeklyReport()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>导出周报</button>
   </div>
 </header>
 <div class="content">
@@ -337,6 +338,12 @@ function detectType(headers) {
   if(h.includes('任务名称'))return'task';
   return null;
 }
+function detectWeeklyCSV(headers) {
+  var h=headers.join(",");
+  if(h.includes("人员")&&h.includes("本周工作内容"))return true;
+  return false;
+}
+
 
 function getFieldIdx(headers, names) {
   for(var i=0;i<headers.length;i++){ for(var j=0;j<names.length;j++){if(headers[i]===names[j])return i;} }
@@ -560,6 +567,12 @@ function inferDateFromFolder(files) {
   if(m)return '2026-'+String(m[1]).padStart(2,'0')+'-'+String(m[2]).padStart(2,'0');
   return null;
 }
+function detectWeeklyCSV(headers) {
+  var h=headers.join(",");
+  if(h.includes("人员")&&h.includes("本周工作内容"))return true;
+  return false;
+}
+
 
 function setStatsDate(dateText) {
   store.statsDate=dateText||TODAY;
@@ -706,6 +719,133 @@ function renderAll() {
   renderOverview();
   if(store.currentProduct) renderProductView(store.currentProduct);
   toggleEmpty();
+}
+
+﻿function getWeekRange() {
+  var d=new Date(TODAY);
+  var day=d.getDay();
+  var monday=new Date(d); monday.setDate(d.getDate()-(day===0?6:day-1));
+  var friday=new Date(monday); friday.setDate(monday.getDate()+4);
+  function fmt(dd){return dd.getFullYear()+"/"+(dd.getMonth()+1)+"/"+dd.getDate();}
+  return {text:fmt(monday)+"-"+fmt(friday), mon:monday, fri:friday};
+}
+
+function exportWeeklyReport() {
+  if(!store.records.length){alert("请先导入数据");return;}
+  var wr=getWeekRange();
+  var s=store;
+  var style='<style>td,th{border:1px solid #999;padding:4px 8px;vertical-align:top}.t-title{font-family:"Microsoft YaHei",sans-serif;font-size:16px;font-weight:bold;text-align:center;background:#D9E2F3}.t-section{font-family:"Microsoft YaHei",sans-serif;font-size:12px;font-weight:bold;background:#C6EFCE}.t-header{font-family:"Microsoft YaHei",sans-serif;font-size:10px;font-weight:bold;text-align:center;background:#F2F2F2}.t-body{font-family:SimSun,宋体,serif;font-size:11px;white-space:pre-line}.t-num{font-family:SimSun,宋体,serif;font-size:11px;text-align:center}.t-info{font-family:"Microsoft YaHei",sans-serif;font-size:11px;text-align:center;color:#666}</style>';
+  var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8">'+style+'</head><body>';
+
+  h+='<table><tr><td colspan="12" class="t-title">南京研发部工作周报（'+wr.text+'）</td></tr></table><br>';
+
+  var reqDev={};
+  s.records.filter(function(r){return r.type==="task";}).forEach(function(t){
+    var m=(t.rel||"").match(/#(\d+)/);
+    if(!m)return;
+    var reqId=m[1];
+    if(!reqDev[reqId])reqDev[reqId]={devDone:""};
+    var isDevTask=(t.kind||"").indexOf("开发")>=0||(t.title||"").indexOf("开发")>=0;
+    if(isDevTask){
+      var td=t.done||t.closed||"";
+      if(td&&(!reqDev[reqId].devDone||td>reqDev[reqId].devDone))reqDev[reqId].devDone=td;
+    }
+  });
+
+  function reqIsLaunched(r){return isThisWeek(r.closed)&&(r.phase==="测试完毕"||r.phase==="已关闭"||!isReqOpen(r));}
+  function reqIsTesting(r){return isReqOpen(r)&&/测试中/.test(r.phase||"");}
+  function reqIsDev(r){return isReqOpen(r)&&!/测试中|已立项|未开始|草稿/.test(r.phase||"");}
+  function reqIsPending(r){return isReqOpen(r)&&/已立项|未开始|草稿/.test(r.phase||"");}
+  function getReqDevDone(r){return reqDev[r.id]?reqDev[r.id].devDone:"";}
+
+  h+='<table><tr><td colspan="12" class="t-section">第一部分：项目研发进度</td></tr>';
+  h+='<tr class="t-header"><th>序号</th><th>项目名称</th><th>阶段</th><th>本周研发工作</th><th>下周研发工作</th><th>需求标题</th><th>编号</th><th>状态</th><th>创建日期</th><th>下发日期</th><th>开发完成日期</th><th>上线日期</th></tr>';
+
+  store.products.forEach(function(p,pi){
+    var recs=s.records.filter(function(r){return r.product===p&&r.type==="req";});
+    if(!recs.length)return;
+    recs.sort(function(a,b){return (a.created||"").localeCompare(b.created||"");});
+    var launched=recs.filter(reqIsLaunched);
+    var testing=recs.filter(reqIsTesting);
+    var dev=recs.filter(reqIsDev);
+    var pending=recs.filter(reqIsPending);
+    var weekParts=[];
+    if(launched.length)weekParts.push("本周上线需求 "+launched.length+" 个");
+    if(testing.length)weekParts.push("已提测需求 "+testing.length+" 个");
+    if(dev.length)weekParts.push("研发中需求 "+dev.length+" 个");
+    if(pending.length)weekParts.push("待开发需求 "+pending.length+" 个");
+    var weekWork=weekParts.length?weekParts.join("，")+"。" : "\u2014";
+    var nextCount=testing.length+dev.length+pending.length;
+    var nextPlan=nextCount?"继续推进剩余需求开发测试":"\u2014";
+    var activeReqs=recs.filter(function(r){return isReqOpen(r)||isThisWeek(r.closed);});
+    if(!activeReqs.length){
+      h+='<tr><td class="t-num">'+(pi+1)+'</td><td class="t-body">'+p+'</td><td class="t-body">开发</td><td class="t-body">'+weekWork+'</td><td class="t-body">'+nextPlan+'</td><td class="t-body">\u2014</td><td class="t-num">\u2014</td><td class="t-body">\u2014</td><td class="t-num">\u2014</td><td class="t-num">\u2014</td><td class="t-num">\u2014</td><td class="t-num">\u2014</td></tr>';
+      return;
+    }
+    var N=activeReqs.length;
+    activeReqs.forEach(function(r,ri){
+      if(ri===0){
+        h+='<tr><td class="t-num" rowspan="'+N+'">'+(pi+1)+'</td><td class="t-body" rowspan="'+N+'">'+p+'</td><td class="t-body" rowspan="'+N+'">开发</td><td class="t-body" rowspan="'+N+'">'+weekWork+'</td><td class="t-body" rowspan="'+N+'">'+nextPlan+'</td>';
+      }else{
+        h+='<tr>';
+      }
+      h+='<td class="t-body">'+(r.title||"\u2014")+'</td>';
+      h+='<td class="t-num">'+(r.id||"\u2014")+'</td>';
+      h+='<td class="t-body">'+(r.phase||"\u2014")+'</td>';
+      h+='<td class="t-num">'+(r.created||"\u2014")+'</td>';
+      h+='<td class="t-num">'+(r.reviewed||"\u2014")+'</td>';
+      h+='<td class="t-num">'+(getReqDevDone(r)||"\u2014")+'</td>';
+      h+='<td class="t-num">'+(r.closed||"\u2014")+'</td>';
+      h+='</tr>';
+    });
+  });
+  h+='</table><br>';
+
+  h+='<table><tr><td colspan="12" class="t-section">第二部分：其他工作</td></tr>';
+  h+='<tr class="t-header"><th>序号</th><th colspan="3">工作项</th><th>负责人</th><th colspan="4">本周工作进度</th><th colspan="3">下周工作计划</th></tr>';
+  var weeklyData=store.weeklyData||[];
+  var lqData=weeklyData.filter(function(w){return w.person==="\u674e\u5029";});
+  if(!lqData.length){
+    h+='<tr><td colspan="12" class="t-info">\u6682\u65e0\u5176\u4ed6\u5de5\u4f5c\u8bb0\u5f55\uff0c\u8bf7\u5bfc\u5165\u5305\u542b\u5468\u62a5CSV\u7684\u65e5\u671f\u6587\u4ef6\u5939</td></tr>';
+  }else{
+    lqData.forEach(function(w){
+      var workText=w.work||"";
+      var planText=w.plan||"";
+      var workLines=workText.split(/\n|\r\n|\r/);
+      var planLines=planText.split(/\n|\r\n|\r/);
+      var items=[];
+      workLines.forEach(function(line){
+        var t=line.trim();
+        if(!t)return;
+        if(/^\d+\./.test(t)){
+          items.push({title:t.replace(/^\d+\.\s*/,''), progress:[]});
+        }else if(/^[（(]/.test(t)){
+          if(items.length)items[items.length-1].progress.push(t);
+        }
+      });
+      if(!items.length){items.push({title:workText, progress:[]});}
+      items.forEach(function(item,ii){
+        h+='<tr>';
+        h+='<td class="t-num">'+(ii+1)+'</td>';
+        h+='<td class="t-body" colspan="3">'+item.title+'</td>';
+        h+='<td class="t-body">\u674e\u5029</td>';
+        h+='<td class="t-body" colspan="4">'+(item.progress.length?item.progress.join('<br>'):'\u2014')+'</td>';
+        h+='<td class="t-body" colspan="3">\u2014</td>';
+        h+='</tr>';
+      });
+    });
+  }
+  h+='</table><br>';
+
+  h+='<table><tr><td colspan="12" class="t-section">第三部分：需要协调事宜</td></tr>';
+  h+='<tr class="t-header"><th>序号</th><th colspan="4">事宜描述</th><th colspan="3">涉及方</th><th colspan="4">备注</th></tr>';
+  h+='<tr><td class="t-num">\u2014</td><td class="t-body" colspan="4">暂无</td><td class="t-body" colspan="3">\u2014</td><td class="t-body" colspan="4">\u2014</td></tr>';
+  h+='</table></body></html>';
+
+  var blob=new Blob([h],{type:"application/vnd.ms-excel;charset=utf-8"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a"); a.href=url; a.download="南京研发部工作周报_"+wr.text.replace(/\d{4}\//g,"").replace(/\//g,"")+".xls";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
 function toggleEmpty() {
@@ -1088,6 +1228,13 @@ function handleFiles(files) {
       if(type){
         var recs=normalizeRecords(rows,type);
         allRecords=allRecords.concat(recs);
+      }else if(detectWeeklyCSV(rows[0])){
+        var weekly=[];
+        for(var wi=1;wi<rows.length;wi++){
+          var r=rows[wi];
+          if(r.length>=4)weekly.push({person:r[0]||"",role:r[1]||"",work:r[2]||"",plan:r[3]||""});
+        }
+        store.weeklyData=weekly;
       }
       pending--;
       if(pending===0){ loadRecords(allRecords); }
@@ -1110,7 +1257,7 @@ function loadEmbedded() {
 }
 
 function clearData() {
-  store.records=[]; store.products=[]; store.stats=null; store.currentProduct=null;
+  store.records=[]; store.products=[]; store.stats=null; store.currentProduct=null; store.weeklyData=null;
   store.statsDate=null;
   renderAll();
   var label=document.getElementById('stats-date-label');
